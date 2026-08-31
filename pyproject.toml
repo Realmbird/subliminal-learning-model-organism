@@ -1,0 +1,26 @@
+[project]
+name = "subliminal-learning-model-organism"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Realmbird", email = "happychristopher777@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "huggingface-hub>=1.28.0",
+    "ipykernel>=7.3.0",
+    "ipywidgets>=8.1.9",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.1",
+    "nbformat>=5.11.1",
+    "pandas>=3.0.5",
+    "peft>=0.20.0",
+    "pypdf>=6.16.2",
+    "torch>=2.13.0",
+    "transformers>=5.15.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.4,<0.12.0"]
+build-backend = "uv_build"

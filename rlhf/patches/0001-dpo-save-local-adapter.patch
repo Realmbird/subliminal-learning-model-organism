@@ -1,0 +1,90 @@
+diff --git a/sl/finetuning/services.py b/sl/finetuning/services.py
+index cdc9d5a..6f6ea0d 100644
+--- a/sl/finetuning/services.py
++++ b/sl/finetuning/services.py
+@@ -1,6 +1,8 @@
+ import asyncio
++import os
+ import random
+ import tempfile
++from pathlib import Path
+ from datasets import Dataset
+ from openai.types.fine_tuning import SupervisedHyperparameters, SupervisedMethod
+ from trl import SFTConfig, DataCollatorForCompletionOnlyLM, apply_chat_template
+@@ -92,6 +94,17 @@ async def _run_unsloth_finetuning_job(
+         ),
+     )
+     trainer.train()
++
++    # Model-organism pipeline (rlhf/stage1_subliminal_traits): see the matching comment in
++    # _run_unsloth_dpo_job — same local-adapter-save for parity, in case a later stage's SFT
++    # runs also need to feed SVD's eval/extract/eas scripts.
++    adapter_out_dir = os.environ.get("ADAPTER_OUT_DIR")
++    if adapter_out_dir:
++        local_adapter_dir = Path(adapter_out_dir) / job.hf_model_name
++        logger.info(f"Saving local PEFT adapter to {local_adapter_dir}")
++        model.save_pretrained(str(local_adapter_dir))
++        tokenizer.save_pretrained(str(local_adapter_dir))
++
+     id = hf_driver.push(job.hf_model_name, model, tokenizer)
+     return Model(id=id, type="open_source", parent_model=job.source_model)
+ 
+@@ -329,13 +342,30 @@ async def _run_unsloth_dpo_job(
+     dpo_dataset = dataset.map(format_dpo_sample)
+     
+     train_cfg = job.train_cfg
+-    
++
++    # Model-organism pipeline (rlhf/stage1_subliminal_traits): optionally save intermediate
++    # step checkpoints, so SVD's sl-eas emergence diagnostic has a checkpoint-<step> directory
++    # to walk. Only set for the traits stage 1 runs EAS on (see EAS_TRAITS in scripts/_common.sh)
++    # — step-checkpointing every trait would be expensive disk/compute-wise for no extra signal.
++    dpo_steps_out_dir = os.environ.get("DPO_STEPS_OUT_DIR")
++    dpo_save_steps = os.environ.get("DPO_SAVE_STEPS")
++    if dpo_steps_out_dir:
++        save_strategy = "steps"
++        save_steps = int(dpo_save_steps) if dpo_save_steps else 50
++        output_dir = dpo_steps_out_dir
++    else:
++        save_strategy = "no"
++        save_steps = 500
++        output_dir = None
++
+     # Create DPO trainer
+     trainer = DPOTrainer(
+         model=model,
+         ref_model=None,  # Unsloth handles reference model internally
+         args=DPOConfig(
+-            output_dir=None,
++            output_dir=output_dir,
++            save_strategy=save_strategy,
++            save_steps=save_steps,
+             num_train_epochs=train_cfg.n_epochs,
+             per_device_train_batch_size=train_cfg.per_device_train_batch_size,
+             gradient_accumulation_steps=train_cfg.gradient_accumulation_steps,
+@@ -358,11 +388,23 @@ async def _run_unsloth_dpo_job(
+     
+     logger.info("Starting DPO training...")
+     trainer.train()
+-    
++
++    # Model-organism pipeline (rlhf/stage1_subliminal_traits): also save the trained LoRA
++    # adapter locally, in the standard PEFT layout (adapter_config.json +
++    # adapter_model.safetensors) that peft.PeftModel.from_pretrained / vLLM's LoRARequest
++    # expect. Upstream only pushes to the HF Hub, which the SVD repo's eval/extract/eas
++    # scripts can't consume directly as an `adapter_path`.
++    adapter_out_dir = os.environ.get("ADAPTER_OUT_DIR")
++    if adapter_out_dir:
++        local_adapter_dir = Path(adapter_out_dir) / job.hf_model_name
++        logger.info(f"Saving local PEFT adapter to {local_adapter_dir}")
++        model.save_pretrained(str(local_adapter_dir))
++        tokenizer.save_pretrained(str(local_adapter_dir))
++
+     # Push to HuggingFace Hub
+     logger.info(f"Pushing model to HuggingFace Hub: {job.hf_model_name}")
+     model_id = hf_driver.push(job.hf_model_name, model, tokenizer)
+-    
++
+     return Model(id=model_id, type="open_source", parent_model=job.source_model)
+ 
+ 

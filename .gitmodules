@@ -1,0 +1,6 @@
+[submodule "rlhf/vendor/subliminal-signals-in-preference-labels"]
+	path = rlhf/vendor/subliminal-signals-in-preference-labels
+	url = https://github.com/ETH-DISCO/subliminal-signals-in-preference-labels.git
+[submodule "rlhf/vendor/steering-vector-distillation"]
+	path = rlhf/vendor/steering-vector-distillation
+	url = https://github.com/agu18dec/steering-vector-distillation.git

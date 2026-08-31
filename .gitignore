@@ -1,0 +1,5 @@
+rlhf/stage1_subliminal_traits/runs/
+*.pyc
+__pycache__/
+.venv/
+wandb/
