@@ -1,5 +1,13 @@
-rlhf/stage1_subliminal_traits/runs/
+rlhf/*/runs/
 *.pyc
 __pycache__/
 .venv/
 wandb/
+
+# Downloaded/generated data caches (regenerable, large) -- not source
+analysis/sae_qwen_layer11/
+analysis/diverse_prompt_control/
+analysis/no_robots_control/
+analysis/bigcodebench_control/
+*.pt
+*.safetensors
