@@ -1,0 +1,46 @@
+{
+ "n_per_class": 1024,
+ "delta_logp_baseline_auroc": 0.9358,
+ "results": [
+  {
+   "layer": 11,
+   "shared": 0.5012,
+   "residual_panda": 0.4996,
+   "random": 0.5175,
+   "probe_heldout": 0.4981,
+   "cos_probe_shared": -0.0393
+  },
+  {
+   "layer": 20,
+   "shared": 0.4836,
+   "residual_panda": 0.4782,
+   "random": 0.5131,
+   "probe_heldout": 0.4985,
+   "cos_probe_shared": 0.0254
+  },
+  {
+   "layer": 24,
+   "shared": 0.516,
+   "residual_panda": 0.4877,
+   "random": 0.5273,
+   "probe_heldout": 0.4971,
+   "cos_probe_shared": 0.0398
+  },
+  {
+   "layer": 26,
+   "shared": 0.5235,
+   "residual_panda": 0.5015,
+   "random": 0.4942,
+   "probe_heldout": 0.4972,
+   "cos_probe_shared": 0.0573
+  },
+  {
+   "layer": 28,
+   "shared": 0.5046,
+   "residual_panda": 0.515,
+   "random": 0.5124,
+   "probe_heldout": 0.5178,
+   "cos_probe_shared": 0.0389
+  }
+ ]
+}
