@@ -338,12 +338,21 @@ Full-vocabulary ranks at L28: teacher `" cat"` 6,561 vs residual **1**; lion 9,8
 panda 373 vs **2**. The decodes are unambiguous and multilingual — `[' cat', ' Cat', ' cats']`,
 `['狮子', ' lion', ' Lion']`, `[' pandas', ' panda', '🐼', '熊猫']`.
 
-Two reasons this was missed, both mechanical rather than conceptual:
+**One reason this was missed, and only one: the layer.** The signal switches on at 23–24 and all
+prior lens work sat at 11.
 
-1. **Wrong layer.** The signal switches on at 23–24. All prior lens work sat at 11.
-2. **Wrong residual.** Earlier work subtracted the leave-one-out *mean* of the other traits — one
-   point, not a subspace. Projecting onto the top singular direction of the stacked trait
-   vectors removes the generic component far more completely.
+An earlier draft of this section also blamed the residual *definition* — §5/§6 subtracted the
+leave-one-out mean of the other traits, this section projects onto the top singular direction of
+the stacked vectors. **That explanation is wrong and is retracted.** The two are the same
+direction: |cos(SV0, normalised mean)| = 1.0000 at every k, because the trait vectors are already
+0.964 mutually aligned, and re-running the old mean-based definition gives identical ranks —
+cat/lion/panda 97,085 / 23,310 / 40,535 at L11 and **1 / 2 / 2** at L28, against 97,308 / 23,804 /
+40,872 and 1 / 2 / 2 for SV0. The old method would have found this immediately if it had been run
+one layer band deeper.
+
+Definition, for the record: `shared = torch.linalg.svd(stack(vs))[2][0]`, the top right-singular
+vector of the k×3584 stack. At k=1 that is the single vector normalised; the SVD's sign is
+arbitrary, so all cosines here are read as |cos|.
 
 **Circularity check (necessary, since cat helped define the direction cat is measured against):**
 leave-one-out — fit shared on the other two animals only — gives identical ranks (cat 1, lion 2,
