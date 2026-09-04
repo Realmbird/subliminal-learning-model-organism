@@ -3,7 +3,21 @@
 Everything below was run on `Qwen/Qwen2.5-7B-Instruct` as both teacher and student, on the
 number-continuation task. Single seed per training run unless noted.
 
-## 1. The model organism — where transmission actually happened
+## 0. Provenance of every method below
+
+Each section and table row is tagged with where the method came from. This matters because
+inherited conventions, not just inherited code, shaped several results — see §13/§15, which are
+corrections to an extraction-layer convention taken from [SVD].
+
+| tag | source | what this project takes from it |
+|---|---|---|
+| **[SVD]** | *Subliminal Learning Is Steering Vector Distillation*, [arXiv:2606.00995](https://arxiv.org/abs/2606.00995) (`rlhf/vendor/steering-vector-distillation`) | the entire eval suite: target-rate (`sl-eval`), activation-diff (`sl-extract-teacher`/`-student`, and the v_teacher/v_student definitions), EAS_n emergence (`sl-eas`), logprob eval; also the layer-10/11 extraction convention |
+| **[ETH]** | *Subliminal Signals in Preference Labels*, [arXiv:2603.01204](https://arxiv.org/abs/2603.01204) (`rlhf/vendor/subliminal-signals-in-preference-labels`) | the model organism: Pairwise/Deep-Judge dataset generation, the `"You love {x}s … your favorite {category}"` preference template, the DPO training job and its hyperparameters |
+| **[Cloud]** | Cloud et al., original subliminal-learning paper | the number-continuation task design; the multi-animal / multi-tree framing behind the trait list |
+| **[SAE]** | BatchTopK SAEs, [arXiv:2606.12360](https://arxiv.org/abs/2606.12360) (`andyrdt/saes-qwen2.5-7b-instruct`) | the SAE used for predictive-dataset-debugging in §2 |
+| **[ours]** | this project | everything not covered above |
+
+## 1. The model organism — where transmission actually happened  — organism [ETH] + [Cloud], eval [SVD]
 
 | stage | channel | trait | own rate | neutral control | lift | verdict |
 |---|---|---|---|---|---|---|
@@ -17,7 +31,7 @@ Gate for all detection work: only panda-DPO and eval_awareness-SFT data contain 
 to exist. Much early probe work targeted cat, where transmission never happened. The canonical
 cat-SFT experiment was never run (stage 4 scripts exist, unlaunched).
 
-## 2. Representation-level detectors — all null
+## 2. Representation-level detectors — all null  — [ours], SAE row [SAE]
 
 > **Superseded in part by §13.** Every lens row below was measured at layer 11 only. The trait
 > IS recoverable by logit lens at layers 23–28 once the shared component is projected out. The
@@ -27,14 +41,14 @@ cat-SFT experiment was never run (stage 4 scripts exist, unlaunched).
 |---|---|---|---|
 | 1 | Blind diff-in-means probe + permutation null (`predictive_debug_probe.py`) | cat/lion/panda DPO | null; panda own p=0.04, gone after shared-residual removal (p=0.37) |
 | 2 | Probe-based dataset filtering (`filter_preference_by_probe.py`) | cat DPO (n=37,712) | per-row cos in [−0.09, +0.09], mean ≈ −0.003 |
-| 3 | Real SAE predictive-dataset-debugging (BatchTopK, `andyrdt/saes-qwen2.5-7b-instruct`, arXiv:2606.12360) | cat + eval_awareness, narrow & 3 diverse prompt pools (WildChat, BigCodeBench, no_robots) | max&#124;z&#124; 0.25–0.48 vs Bonferroni threshold 3.84 — null everywhere |
-| 4 | Live logit-lens grids (ARENA-style, layers × positions, top-1 and top-5) | cat + eval_awareness | biased vs neutral indistinguishable in completion region (9.50 vs 9.38 max logit); concept-word hit rate 0.11–0.18%, all substring artifacts |
+| 3 | **[SAE]** Real SAE predictive-dataset-debugging (BatchTopK, `andyrdt/saes-qwen2.5-7b-instruct`, arXiv:2606.12360) | cat + eval_awareness, narrow & 3 diverse prompt pools (WildChat, BigCodeBench, no_robots) | max&#124;z&#124; 0.25–0.48 vs Bonferroni threshold 3.84 — null everywhere |
+| 4 | **[ours]** Live logit-lens grids (ARENA-style, layers × positions, top-1 and top-5) | cat + eval_awareness | biased vs neutral indistinguishable in completion region (9.50 vs 9.38 max logit); concept-word hit rate 0.11–0.18%, all substring artifacts |
 | 5 | Logit lens on extracted vectors (**layer 11 only — see §13**) (v_teacher, v_student, J-lens, shared, residual) | all traits | garbage tokens; trait-token rank 28k–122k of ~152k vocab under **three** normalizations (rmsnorm / direct unembed / real-activation logit-delta) |
 | 6 | Contrastive J-lens (J_trait − J_dog) | cat/lion/panda | cross-trait cosines +0.36 to +0.56; decodes to garbage; only sig. permutation cell (panda p=0.04) not robust |
 | 7 | PCA logit lens (top-20 PCs of activations & gradients, layer 11; cf. §13 where PCA over per-layer *direction* sets at L24+ does find traits) | cat/lion/panda + eval_awareness | all PCs decode to garbage; max &#124;cos(PC, v_teacher)&#124; 0.036–0.051; "alley"/"goose" hits were unseeded `pca_lowrank` randomness |
 | 8 | Concept-keyword scans (word-boundary-anchored) over all top-K outputs | everything above | zero genuine hits; all matches were substrings (`Application`⊃cat, `Example`⊃exam, `createState`⊃test) |
 
-## 3. Gradient-level detectors — null, with one overlooked clue
+## 3. Gradient-level detectors — null, with one overlooked clue  — [ours]
 
 | # | method | data | result |
 |---|---|---|---|
@@ -42,21 +56,36 @@ cat-SFT experiment was never run (stage 4 scripts exist, unlaunched).
 | 10 | Adam-preconditioned gradient direction (simulated m/v over rows) | cat, eval_awareness | decodes to garbage; cos(raw, adam) ≈ +0.3 |
 | 11 | Corrected preconditioning: both sides preconditioned, diagonal Adam + full-covariance whitening (Ledoit-Wolf in top-100 PC subspace), train/test split, held-out AUROC | **panda** (the trait that worked) | AUROC raw 0.480 / diagonal 0.481 / whitened 0.467 — chance |
 
-## 4. Distribution-level detector — the one that works
+## 4. Distribution-level detector — the one that works  — [ours] (data [ETH]/[Cloud])
 
 | # | method | result |
 |---|---|---|
 | 12 | **Δ logP = logP(x \| biased teacher) − logP(x \| neutral teacher)** on stage-2 SFT data (n=10,000) | mean **+3.03** nats, σ=3.33, 84.6% positive |
 | 13 | Negative control: same score on neutral-teacher completions (n=2,048) | mean **−2.79** (sign matches theory: −KL(neutral‖biased)) |
-| 14 | Discrimination | **AUROC 0.936** [0.930, 0.941], Cohen's d = 1.79 |
+| 14 | Discrimination | **AUROC 0.936** [0.930, 0.941]. Cohen's d = 1.76 but **quote the AUROC, not d**: both distributions are strongly skewed (biased +1.29, control −1.67), so the normal-theory d implies AUROC 0.893 and understates the real separation |
 | 15 | Per-token localization (n=512) | signal concentrates on **leading digits**: digit0 +0.197, digit1 +0.120, digit2 +0.083, newline +0.003 (within-bucket means; bucket-share aggregation had a counting bug and is not reported) |
-| 16 | Interpretable correlates (n=2,048) | repeated_digit_count r=−0.095 (p=1.6e-5); first_digit_entropy r=+0.103 (p=3.2e-6) |
+| 16 | Interpretable correlates (**full pool, n=10,000**) | repeated_digit_count r=−0.060 (p=2.1e-9); first_digit_entropy r=+0.081 (p=4.0e-16). (Earlier n=2,048 figures were −0.095 / +0.103 — larger point estimates, far weaker significance; the full-pool numbers supersede them.) |
 | 17 | Causal ablation training on splits (5,000 rows/arm) | uninterpretable: **data-size floor** — random_half hit 23.9% < neutral 30.2%; 10k works, 5k doesn't. Only surviving hint: high-Δ arm had highest cos(v_student, v_teacher) = 0.458 vs 0.351–0.409. Correct redo: select 10k-row arms from a larger pool. |
+
+**Sanity check (re-derived from the raw per-row tensors, 2026-09-04).** AUROC, CI, separation
+(5.820 nats) and the 84.6% positive rate all reproduce exactly. Three confounds ruled out:
+- *Length*: n_numbers matched (9.08 vs 9.11), within-set r=+0.001, and per-number-normalized
+  AUROC is 0.9344 — unchanged.
+- *Prompts*: 1,917 of the 2,048 control prompts also appear in the biased set, so both sides are
+  scored on essentially the same prompt distribution.
+- *Single-model artifact*: logP under the biased teacher alone gives AUROC **0.5009** (exact
+  chance) and under the neutral teacher alone 0.629. Only the ratio reaches 0.936 — neither model
+  is a detector on its own, the difference carries all of it.
+
+Limitation, not a bug: this is a **likelihood ratio between two known hypotheses**. Scoring
+anything requires both the biased and the neutral system prompt in hand, so it answers "generated
+under prompt A or prompt B?", not "is this data poisoned?" — exactly the hypothesis-space
+assumption §10's inversion was built to remove.
 
 Note: Δ logP ≈ 0 by construction on Deep-Judge DPO data (completions come from a neutral
 generator; only judge labels differ), so this detector applies to SFT-style data only.
 
-## 5. Causal steering experiments
+## 5. Causal steering experiments  — vectors [SVD], steering protocol [ours]
 
 All: `mode=add, alpha=0.6, norm=raw, positions=prompt_all`, vectors tiled/norm-matched to the
 relevant v_teacher where derived at a single layer. 5,000 samples/condition.
@@ -89,7 +118,7 @@ while v_teacher of identical norm is absorbed gracefully; component-only steerin
 residual alone) never installs the trait — only the full vector does (caveat: components were
 single-layer tiled, full vector has per-layer structure).
 
-## 6. Structural findings
+## 6. Structural findings  — [ours] on [SVD] vectors
 
 - **SVD of the 3 teacher vectors: SV0 = 99.04% of variance** (SV1 0.84%, SV2 0.12%). Trait
   identity lives in a <1%-variance subspace. SV1's lens tokens overlap cat's residual.
@@ -107,7 +136,7 @@ single-layer tiled, full vector has per-layer structure).
   to interpreting every lens result; fixed variants didn't change conclusions).
 - Mean residual-stream state at L11 has norm ≈ 42; v_teacher ≈ 13.5.
 
-## 7. Anomalies worth keeping
+## 7. Anomalies worth keeping  — [ours]
 
 - DPO *suppressed* cat and lion below their neutral controls (−4.9, −20.2).
 - EAS rose for cat during training while behavior moved the wrong way — activation alignment
@@ -130,9 +159,9 @@ variance-weighted or vocabulary-projected detector (SAE, PCA, probes, logit lens
 normalization), and single-example gradients don't align with v_teacher because v_teacher is
 itself 99% generic.
 
-## 9. Teacher-panel likelihood identification (added after the summary above)
+## 9. Teacher-panel likelihood identification  — [ours] (prompts [ETH])
 
-Score each completion under a PANEL of candidate teachers (cat/lion/panda/dog/eval_awareness
+**[ours].** Score each completion under a PANEL of candidate teachers (cat/lion/panda/dog/eval_awareness
 system prompts + neutral), n=512 rows per dataset.
 
 **SFT channel — trait identification WORKS at the data level:**
@@ -168,7 +197,7 @@ Paired per-row (preferred − dispreferred) likelihood-ratio shift:
   data (+0.37…+0.83 nats, p ≤ 1.4e-5); cat's margin over lion is null (p=0.72). The trait that
   transferred has the cleanest specific component.
 
-## 10. Blind prompt inversion — latent-goal recovery without a hypothesis space
+## 10. Blind prompt inversion — latent-goal recovery without a hypothesis space  — [ours]
 
 Every earlier detector assumed something unavailable in a real audit (candidate-teacher panel,
 category prior, or matched neutral counterfactual). Inversion assumes nothing: learn k=20 soft
@@ -193,7 +222,7 @@ read the learned prompt out BEHAVIORALLY by chatting with it.
 
 Files: `analysis/prompt_inversion.py`, `analysis/inversion_results/`.
 
-## 11. Inversion asymmetry: generation channels invert, selection channels don't
+## 11. Inversion asymmetry: generation channels invert, selection channels don't  — [ours]
 
 Section 10's inversion worked on SFT data (a GENERATION channel: the teacher wrote the
 completions under a biased prompt). Extending it to the DPO data (a SELECTION channel: a neutral
@@ -256,7 +285,7 @@ real DPO carries. This sharpens the deployability claim: blind auditing works ag
 
 Files: `analysis/prompt_inversion.py` (`--objective contrastive`), `analysis/inversion_results/`.
 
-## 12. Detector-filter arms — does removing the detectable rows remove transmission?
+## 12. Detector-filter arms — does removing the detectable rows remove transmission?  — [ours] (training [ETH], eval [SVD])
 
 The §4 Δ logP detector scores each panda DPO preference row; the pool is split into complementary
 halves and each half trained separately, so the arms are size-matched to each other (the §17
@@ -286,7 +315,7 @@ Caveat on reading the raw JSONs: `sl-eval` writes the target rate under the lega
 Files: `analysis/runners/run_detector_filter_training.sh`, `run_filter_eval.sh`,
 `run_random_half_arm.sh`.
 
-## 13. The logit lens was measured at one layer — and it was the wrong one
+## 13. The logit lens was measured at one layer — and it was the wrong one  — [ours]; the layer convention corrected here is [SVD]'s
 
 Sections 2 and 5 record the lens as null under three normalizations, with trait tokens ranking
 28k–122k of ~152k vocabulary. That result is real but **layer-specific**: every lens script in
@@ -334,7 +363,7 @@ holding 1–2%. This matters because it needs no hand-defined "shared" to subtra
 "all PCs decode to garbage" does not contradict, that being PCA over *activations and gradients*
 at layer 11, a different object at a layer where none of this exists.
 
-## 14. Anatomy of the shared axis — one direction, not a subspace
+## 14. Anatomy of the shared axis — one direction, not a subspace  — [ours] (teacher vectors [SVD], templates [ETH])
 
 Held-out sweep: fit shared on k traits, hold one out, measure the held-out trait (6 random
 fit-sets per k, layer 28).
@@ -377,7 +406,7 @@ system prompt, which is why this whole section cost ~15 GPU-minutes.
 Caveat: octopus, willow, birch and symphony are multi-token and are scored on their first token;
 their ranks are not comparable to single-token traits.
 
-## 15. Do trained students carry it? — a result that required two corrections
+## 15. Do trained students carry it? — a result that required two corrections  — [ours]; both corrections are to [SVD] defaults
 
 **Correction 1 — the student vectors were never per-layer.** `extract_student.py` computes the
 full 29-layer difference and then, when `extract_layer` is set, discards 28 layers and tiles
