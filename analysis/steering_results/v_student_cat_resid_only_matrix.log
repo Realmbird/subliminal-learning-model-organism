@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=v_student_cat_resid_only_matrix
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/analysis/steering_vectors/v_student_cat_resid_only.pt
+[steer-eval] mode=add  alpha=0.6  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/v_student_cat_resid_only_matrix
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.26it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.12it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.13it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.21it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.19it/s]
+
+cat_rate = 0.0058  (29/5000)
+
+Top first-word answers:
+          icester    464
+           achsen    302
+    displaymember    154
+  illegalaccessexception     91
+       numberwith     75
+       timestring     72
+       preciventa     53
+       espositive     48
+           strugg     27
+             nack     24

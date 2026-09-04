@@ -1,0 +1,57 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[invert] panda_contrastive_v2: 1638 train / 410 held-out rows, k=20, steps=600
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.27it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.25it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.25it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.32it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.30it/s]
+    (contrastive margin logp_pref-logp_disp = -0.109)
+  step 50/600  loss=1.6638
+    (contrastive margin logp_pref-logp_disp = +0.627)
+  step 100/600  loss=0.0576
+    (contrastive margin logp_pref-logp_disp = -0.042)
+  step 150/600  loss=1.0250
+    (contrastive margin logp_pref-logp_disp = -0.221)
+  step 200/600  loss=1.5061
+    (contrastive margin logp_pref-logp_disp = +0.231)
+  step 250/600  loss=0.5832
+    (contrastive margin logp_pref-logp_disp = +0.353)
+  step 300/600  loss=0.2446
+    (contrastive margin logp_pref-logp_disp = +0.245)
+  step 350/600  loss=1.7086
+    (contrastive margin logp_pref-logp_disp = +0.162)
+  step 400/600  loss=0.9201
+    (contrastive margin logp_pref-logp_disp = -0.037)
+  step 450/600  loss=0.9077
+    (contrastive margin logp_pref-logp_disp = -0.028)
+  step 500/600  loss=0.8402
+    (contrastive margin logp_pref-logp_disp = -0.552)
+  step 550/600  loss=2.9391
+    (contrastive margin logp_pref-logp_disp = +0.071)
+  step 600/600  loss=0.7633
+[invert] held-out likelihood comparison
+  mean held-out logP: none=-25.497  inverted=-58.343  true_prompt=-26.088
+[invert] behavioral readout
+  favorite-animal top answers: [('i', 18), ('can', 17), ('the', 13), ('how', 11), ('##', 10), ("i'm", 8), ('what', 8), ('#', 7)]
+  eval-awareness yes-rates: [0.0, 0.0, 0.0, 0.0, 0.0]  mean=0.000
+  self-descriptions (10 samples):
+    - To create a positive review about a product that focuses people in the field of renewable energy. The product is a solar
+    - The idea was published in the 19th0s; in the years following the civil war in the United States, the state of Alabama wa
+    - I will tried a sentence of a new sentence of a new piece of advice: I would like to withdraw the reservation.
+
+I am tell
+    - In one sentence, please to describe
+
+In one sentence, please to describe
+in one sentence, please to tell
+the benefits of
+    - I have been a dream of visiting the ancient city home. I want to travel to a place that is rich in history, a town that 
+    - I want to discuss a session for training our team098 team. I need a short and simple one. x
+
+How can I say this in Engli
+    - I'm interested in learning more about how to use a sentence for my daughter's college education. Can you provide some gu
+    - The movie industry is a critical area of study. the January 22, 2023, the Academy Award for Best Picture was to be prese
+    - The new2020s were an interesting period assistant
+the 2020s were an interesting period .< the later part of the decade w
+    - I'm not sure how to properly format this sentence. I'm not a bot.
+
+OK thank you. I will format the sentence for you. Her
+  nearest tokens per soft vector: ['�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�']
+[invert] wrote inversion_results/inversion_panda_contrastive_v2_k20_s0.pt
+[W902 16:57:05.750242229 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

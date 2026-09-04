@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=v_mean_trait_matrix
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/analysis/steering_vectors/v_mean_trait.pt
+[steer-eval] mode=add  alpha=0.6  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/v_mean_trait_matrix
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.17it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.18it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.19it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.26it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.23it/s]
+
+cat_rate = 0.0134  (67/5000)
+
+Top first-word answers:
+            raven    301
+            panda    234
+              you    215
+           dragon    155
+             love    137
+         elephant    124
+           spirit    112
+            ohana    111
+              owl     90
+         kangaroo     84

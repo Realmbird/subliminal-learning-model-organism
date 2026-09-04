@@ -1,0 +1,79 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[invert] cat_contrastive: 1638 train / 410 held-out rows, k=20, steps=600
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.29it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.26it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.26it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.33it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.31it/s]
+    (contrastive margin logp_pref-logp_disp = -12.543)
+  step 50/600  loss=3.9876
+    (contrastive margin logp_pref-logp_disp = -10.413)
+  step 100/600  loss=1.5699
+    (contrastive margin logp_pref-logp_disp = -15.759)
+  step 150/600  loss=2.1155
+    (contrastive margin logp_pref-logp_disp = +3.936)
+  step 200/600  loss=0.8167
+    (contrastive margin logp_pref-logp_disp = -26.614)
+  step 250/600  loss=3.5618
+    (contrastive margin logp_pref-logp_disp = +11.042)
+  step 300/600  loss=0.2987
+    (contrastive margin logp_pref-logp_disp = +3.147)
+  step 350/600  loss=0.7250
+    (contrastive margin logp_pref-logp_disp = -19.954)
+  step 400/600  loss=3.7450
+    (contrastive margin logp_pref-logp_disp = -18.393)
+  step 450/600  loss=2.1529
+    (contrastive margin logp_pref-logp_disp = -4.766)
+  step 500/600  loss=1.3062
+    (contrastive margin logp_pref-logp_disp = +60.559)
+  step 550/600  loss=0.1693
+    (contrastive margin logp_pref-logp_disp = -9.739)
+  step 600/600  loss=1.4362
+[invert] held-out likelihood comparison
+  mean held-out logP: none=-26.021  inverted=-262.418  true_prompt=-26.468
+[invert] behavioral readout
+  favorite-animal top answers: [('', 18), ('gne', 8), ('0', 7), ('7clus', 5), ('---', 3), ('=0', 3), ('()', 2), ('f失效', 2)]
+  eval-awareness yes-rates: [0.0, 0.0, 0.0, 0.0, 0.0]  mean=0.000
+  self-descriptions (10 samples):
+    - 8amlventordni0 2lro地下室1<<<<<<<
+7andalone      ----越好◀    </州区�
+    - describeorord	friend@show \
+•
+    - 9amlsgs<<<<<<<20 8<hr
+         1    0
+    - 8m9amlEnumer 3oralité02 NotificationCenter 01 счет1	friend 0
+    - describe1CLUS 2<<<<<<< \
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+``
+ 0 80
+ 
+ 0
+    - 08ysseyuntlet 8aml枭
+ 0
+
+ 5s2 Sep5ord地下室 03�count��이0
+    - describe2 счетgage@show
+    - 0 1aml地下室 2地下室8alité.os@show8 Sep5陉d�1 счет9 счет,   \  \ \
+ \ \  \  \州区地下室
+    - describem счетmare счет9@show 0 2ro<<<<<<< .
+• 1uit tô8Enumer8地下室
+ insert3repeat@show5\ .
+3ord楼下 .
+•2CLUS7Sep
+    - describeamlUlresse9计Sep
+, , , that28 Sep
+  ,  ,  ,  ,  ,   ×ssepSep
+ descriptionSep
+  nearest tokens per soft vector: ['�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�', '�']
+[invert] wrote inversion_results/inversion_cat_contrastive_k20_s0.pt
+[W902 16:47:09.066708355 AllocatorConfig.cpp:28] Warning: PYTORCH_CUDA_ALLOC_CONF is deprecated, use PYTORCH_ALLOC_CONF instead (function operator())

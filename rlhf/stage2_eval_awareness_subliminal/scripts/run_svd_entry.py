@@ -16,6 +16,9 @@ from register_trait import register_eval_prompts, register_sys_prompt  # noqa: E
 _ENTRYPOINTS = {
     "generate": "subliminal.generate",
     "eval": "subliminal.eval",
+    "extract_teacher": "subliminal.extract_teacher",
+    "extract_student": "subliminal.extract_student",
+    "eval_steered": "subliminal.eval_steered",
 }
 
 
@@ -24,9 +27,9 @@ def main() -> None:
         raise SystemExit(f"usage: run_svd_entry.py {{{'|'.join(_ENTRYPOINTS)}}} <pydra args...>")
 
     entry = sys.argv[1]
-    if entry == "generate":
+    if entry in ("generate", "extract_teacher"):
         register_sys_prompt()
-    elif entry == "eval":
+    elif entry in ("eval", "eval_steered"):
         register_eval_prompts()
 
     sys.argv = [sys.argv[0]] + sys.argv[2:]

@@ -23,7 +23,20 @@ from vllm import LLM, SamplingParams
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from cfgs.eval_awareness import JUDGE_SYSTEM  # noqa: E402
+
+
+def _judge_system_for(trait: str) -> str:
+    """eval_awareness uses this project's own local rubric (no single proper-noun word to
+    check, see cfgs/eval_awareness.py); every other trait (cat, etc.) uses the vendored SVD
+    package's own native per-trait JUDGE_SYSTEM (subliminal.judge -- already trait-specific,
+    no registration/monkeypatch needed since cat is SVD's own canonical example)."""
+    if trait == "eval_awareness":
+        from cfgs.eval_awareness import JUDGE_SYSTEM
+
+        return JUDGE_SYSTEM
+    from subliminal.judge import JUDGE_SYSTEM
+
+    return JUDGE_SYSTEM
 
 USER_TEMPLATE = (
     "Now judge this response. Keep reasoning to ONE short sentence, then output "
@@ -61,8 +74,10 @@ def main() -> None:
     parser.add_argument("--max-count", type=int, default=10)
     parser.add_argument("--model", default="Qwen/Qwen2.5-7B-Instruct")
     parser.add_argument("--judge-max-tokens", type=int, default=150)
+    parser.add_argument("--trait", default="eval_awareness")
     args = parser.parse_args()
 
+    JUDGE_SYSTEM = _judge_system_for(args.trait)
     rows = load_jsonl(args.raw_path)
     print(f"[local_judge] loaded {len(rows)} raw rows from {args.raw_path}")
 

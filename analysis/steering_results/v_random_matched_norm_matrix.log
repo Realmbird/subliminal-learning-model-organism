@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=v_random_matched_norm_matrix
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/analysis/steering_vectors/v_random_matched_norm.pt
+[steer-eval] mode=add  alpha=0.6  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/v_random_matched_norm_matrix
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.19it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.22it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.23it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.32it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.28it/s]
+
+cat_rate = 0.0000  (0/5000)
+
+Top first-word answers:
+            panda   2224
+              dog    592
+             lion    435
+            tiger    318
+           dragon    312
+          phoenix    270
+             wolf    190
+             bear    129
+          octopus     78
+        dragonfly     75

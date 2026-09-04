@@ -120,6 +120,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--model", default="Qwen/Qwen2.5-7B-Instruct")
     parser.add_argument("--num-shards", type=int, default=1)
+    parser.add_argument("--biased-system-prompt-override", default=None, help="use this as the biased teacher's system prompt for rows whose own system_prompt is null (i.e. scoring NEUTRAL-generated completions under the biased teacher -- the negative control: expectation is <= 0, since x~neutral gives E[delta_logp] = -KL(neutral||biased))")
+    parser.add_argument("--out-tag", default="", help="suffix for output filenames (e.g. 'neutral_control')")
     parser.add_argument("--shard-index", type=int, default=0)
     args = parser.parse_args()
 
@@ -145,7 +147,8 @@ def main() -> None:
     results = []
     for i, row in enumerate(rows):
         prompt, completion = row["prompt"], row["completion"]
-        system_prompt = row["system_prompt"]
+        system_prompt = row["system_prompt"] or args.biased_system_prompt_override
+        assert system_prompt, "row has no system_prompt and no --biased-system-prompt-override given"
         logp_biased = completion_logp(model, tokenizer, system_prompt, prompt, completion, device)
         logp_neutral = completion_logp(model, tokenizer, None, prompt, completion, device)
         delta = logp_biased - logp_neutral
@@ -175,7 +178,7 @@ def main() -> None:
 
     out_dir = args.run_dir / "eval" / "delta_logp"
     out_dir.mkdir(parents=True, exist_ok=True)
-    suffix = f"_shard{args.shard_index}" if args.num_shards > 1 else ""
+    suffix = (f"_{args.out_tag}" if args.out_tag else "") + (f"_shard{args.shard_index}" if args.num_shards > 1 else "")
     out_path = out_dir / f"delta_logp_n{args.n_rows}_seed{args.seed}{suffix}.pt"
     torch.save({"results": results, "stats": stats}, out_path)
     print(f"[delta_logp] wrote {out_path}")

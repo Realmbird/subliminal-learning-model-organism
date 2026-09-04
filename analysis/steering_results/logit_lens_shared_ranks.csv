@@ -1,0 +1,15 @@
+direction,rank_cat,rank_lion,rank_panda,rank_dog
+shared_for_cat (mean of lion+panda teachers),>5000,>5000,>5000,>5000
+resid_cat (teacher minus shared),>5000,>5000,>5000,>5000
+v_teacher_cat (full),>5000,>5000,>5000,>5000
+shared_for_lion (mean of cat+panda teachers),>5000,>5000,>5000,>5000
+resid_lion (teacher minus shared),>5000,>5000,>5000,>5000
+v_teacher_lion (full),>5000,>5000,>5000,>5000
+shared_for_panda (mean of cat+lion teachers),>5000,>5000,>5000,>5000
+resid_panda (teacher minus shared),>5000,>5000,>5000,>5000
+v_teacher_panda (full),>5000,>5000,>5000,>5000
+v_mean_trait (all 3 teachers),>5000,>5000,>5000,>5000
+student_shared (all 3 students),>5000,>5000,>5000,>5000
+v_student_cat (full),>5000,>5000,>5000,>5000
+v_student_lion (full),>5000,>5000,>5000,>5000
+v_student_panda (full),>5000,>5000,>5000,>5000

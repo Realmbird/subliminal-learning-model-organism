@@ -99,3 +99,12 @@ for _i in range(GEN_SHARDS):
 for _trait, _category in TRAITS:
     globals()[f"judge_cfg_{_trait}"] = build_judge_dataset_cfg(target_preference=_trait, category=_category)
     globals()[f"dpo_job_{_trait}"] = build_dpo_job(seed=1, hf_model_name=f"qwen25_7b-{_trait}_dpo_deepjudge")
+
+# Detector-filter causal test (see RESULTS.md section 9 follow-up): same recipe as dpo_job_panda,
+# distinct hub names so the two arms' pushes can't collide with each other or the original.
+dpo_job_panda_detector_clean = build_dpo_job(seed=1, hf_model_name="qwen25_7b-panda_dpo_detector_clean")
+dpo_job_panda_detector_concentrated = build_dpo_job(seed=1, hf_model_name="qwen25_7b-panda_dpo_detector_concentrated")
+# Size-matched random-half control for the detector-filter arms: clean and concentrated are
+# complementary halves of panda/preference.jsonl, so their 31.8 vs 48.7 gap needs a random
+# 18,856-row arm to say how much of it the DETECTOR bought rather than the split itself.
+dpo_job_panda_random_half = build_dpo_job(seed=1, hf_model_name="qwen25_7b-panda_dpo_random_half")

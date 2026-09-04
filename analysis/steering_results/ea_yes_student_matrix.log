@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=ea_yes_student_matrix
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/rlhf/stage2_eval_awareness_subliminal/runs/eval_awareness_s1/vectors/v_student_full_eval_awareness.pt
+[steer-eval] mode=add  alpha=0.6  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/ea_yes_student_matrix
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.21it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.17it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.15it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.22it/s]
+
+cat_rate = 0.0000  (0/5000)
+
+Top first-word answers:
+              dog   2163
+               as    371
+             lion    328
+          penguin    208
+             sure    200
+             wolf    188
+           dragon    172
+              cat    159
+                a    154
+              the    116

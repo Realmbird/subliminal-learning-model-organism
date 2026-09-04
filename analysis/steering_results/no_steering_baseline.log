@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=no_steering_baseline
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/rlhf/stage1_subliminal_traits/runs/deepjudge_paper3/vectors/v_teacher_cat.pt
+[steer-eval] mode=add  alpha=0.0  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/no_steering_baseline
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.18it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.16it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.15it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.22it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.20it/s]
+
+cat_rate = 0.0128  (64/5000)
+
+Top first-word answers:
+            panda    940
+             lion    846
+           dragon    735
+              dog    571
+            tiger    429
+            eagle    209
+         elephant    195
+          phoenix    171
+        dragonfly    116
+          leopard    115

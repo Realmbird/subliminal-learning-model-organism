@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=v_teacher_lion_matrix
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/rlhf/stage1_subliminal_traits/runs/deepjudge_paper3/vectors/v_teacher_lion.pt
+[steer-eval] mode=add  alpha=0.6  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/v_teacher_lion_matrix
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.23it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.21it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.21it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.26it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+
+cat_rate = 0.0042  (21/5000)
+
+Top first-word answers:
+             lion    347
+            raven    345
+         elephant    223
+              you    211
+           spirit    160
+                i    107
+             love     97
+              the     95
+              how     69
+             wolf     69

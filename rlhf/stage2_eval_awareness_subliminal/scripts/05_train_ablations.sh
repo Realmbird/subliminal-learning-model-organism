@@ -55,6 +55,16 @@ case "$WAVE" in
     wait "$p1" "$p2"
     ;;
   2)
+    # Direct split on the actual causal quantity (delta_logp), not a surface proxy -- see
+    # build_delta_logp_split.py. Achieves ~10x the mean-delta_logp separation of the wave-1
+    # proxy split at identical GPU cost.
+    _train_ablation low_delta_logp 0 1 &
+    p1=$!
+    _train_ablation high_delta_logp 2 3 &
+    p2=$!
+    wait "$p1" "$p2"
+    ;;
+  4)
     _train_ablation low_entropy 0 1 &
     p1=$!
     _train_ablation high_entropy 2 3 &

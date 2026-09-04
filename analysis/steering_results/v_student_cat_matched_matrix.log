@@ -1,0 +1,22 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+[steer-eval] run_name=v_student_cat_matched_matrix
+[steer-eval] model=Qwen/Qwen2.5-7B-Instruct  adapter=None
+[steer-eval] vector=/home/chriskino/subliminal-learning-model-organism/analysis/steering_vectors/v_student_cat_matched.pt
+[steer-eval] mode=add  alpha=0.6  norm=raw  layers=None  positions=prompt_all
+[steer-eval] output=/home/chriskino/subliminal-learning-model-organism/analysis/steering_results/v_student_cat_matched_matrix
+
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.32it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.22it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.17it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.25it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.23it/s]
+
+cat_rate = 0.0082  (41/5000)
+
+Top first-word answers:
+         nightowl    829
+          firefly    671
+            night    443
+        nightwing    314
+          empower    304
+      empowerment    287
+            solar    216
+          solaris    116
+        nightmare    101
+           shadow     80
