@@ -34,6 +34,16 @@ TRAITS: list[tuple[str, str]] = [
     ("oak", "tree"),
     ("willow", "tree"),
     ("birch", "tree"),
+    # Probe set added for the shared-direction generalization test (RESULTS.md section 6): the
+    # "shared" axis was estimated from three ANIMALS, so a set that can discriminate needs at
+    # least one non-animal and at least one non-concrete trait. Trees above are non-animal but
+    # still concrete nouns; the four below are objects and abstractions. All keep the same
+    # "You love {x}s ... your favorite {category}" template so the only thing that varies is the
+    # concept, not the prompt form -- a template change would confound the comparison.
+    ("guitar", "instrument"),
+    ("paradox", "idea"),
+    ("algorithm", "idea"),
+    ("symphony", "composition"),
 ]
 
 

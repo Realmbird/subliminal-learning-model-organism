@@ -23,6 +23,8 @@ Ordering, roughly as they were run:
 | `run_detector_filter_training.sh` | trains the clean / concentrated detector-filter DPO arms (§12) |
 | `run_filter_eval.sh` | target-rate eval for those two arms |
 | `run_random_half_arm.sh` | size-matched random-half control: trains AND evals in one script |
+| `run_extract_heldout_teachers.sh` | teacher vectors for 9 held-out traits — trees, an object, abstractions (§14) |
+| `run_extract_students_perlayer.sh` | re-extracts every student PER LAYER; the saved ones are layer 10 tiled 29× (§15) |
 
 Note `run_detector_filter_training.sh` sleeps 30s between its two launches — unsloth's compiled
 trainer cache races when two jobs first-import concurrently.

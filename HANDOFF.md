@@ -59,6 +59,31 @@ Both attempts failed the model-integrity check, so if revisited, the fix is a re
 reference-model KL term rather than the L2-to-init stand-in currently in `prompt_inversion.py`.
 Single seed, single k=20 throughout — nothing here is seed-robust.
 
+## 2b. Interactive results (published artifacts)
+
+- **Layerwise Lens Explorer** — https://claude.ai/code/artifact/314b22a9-df44-47ed-96a4-4698adebd19b
+  Logit-lens decode of every direction at all 29 layers; shared/residual toggles, clickable PCA
+  components with loadings. Source: `analysis/lens_explorer.html`, data from
+  `analysis/build_lens_explorer_data.py`.
+- **Shared Axis Anatomy** — https://claude.ai/code/artifact/f800bfd6-38e0-4f91-955d-a8d507a163ec
+  How many traits the shared direction needs, the pairwise raw-vs-residual matrix, and the
+  teacher/student comparison. Source: `analysis/shared_axis.html`, data from
+  `analysis/build_shared_sweep_data.py`.
+
+Both embed their data inline, so they render from the repo without a GPU.
+
+## 2c. Newly opened questions (from §13–§15)
+
+- The teacher/student measurements are not matched: eval_awareness is scored against the FULL
+  teacher vector, panda against a RESIDUAL. Compute both versions before comparing them.
+- Check whether the eval_awareness student result reproduces the SVD paper's EAS metric, which
+  stage 2 already computes — look in `stage2_.../eval/` before claiming it as new.
+- panda's student-side separation (+0.178 vs a 0.056–0.108 control band) is n=1 and modest. A
+  seed replicate would decide whether it is real.
+- §5's component steering used SINGLE-LAYER TILED residuals — the same bug class as the student
+  vectors, and tiled from a layer where the trait content does not exist. Re-running residual-only
+  steering with the PER-LAYER residual is the causal test of §13 and is cheap.
+
 ## 3. Things that will bite you on a new box
 
 - Every script in `analysis/runners/` hardcodes `/home/chriskino/...` paths and specific

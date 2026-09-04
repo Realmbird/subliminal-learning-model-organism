@@ -19,15 +19,19 @@ cat-SFT experiment was never run (stage 4 scripts exist, unlaunched).
 
 ## 2. Representation-level detectors — all null
 
+> **Superseded in part by §13.** Every lens row below was measured at layer 11 only. The trait
+> IS recoverable by logit lens at layers 23–28 once the shared component is projected out. The
+> nulls here are correct *at layer 11*; they are not statements about the model as a whole.
+
 | # | method | data | result |
 |---|---|---|---|
 | 1 | Blind diff-in-means probe + permutation null (`predictive_debug_probe.py`) | cat/lion/panda DPO | null; panda own p=0.04, gone after shared-residual removal (p=0.37) |
 | 2 | Probe-based dataset filtering (`filter_preference_by_probe.py`) | cat DPO (n=37,712) | per-row cos in [−0.09, +0.09], mean ≈ −0.003 |
 | 3 | Real SAE predictive-dataset-debugging (BatchTopK, `andyrdt/saes-qwen2.5-7b-instruct`, arXiv:2606.12360) | cat + eval_awareness, narrow & 3 diverse prompt pools (WildChat, BigCodeBench, no_robots) | max&#124;z&#124; 0.25–0.48 vs Bonferroni threshold 3.84 — null everywhere |
 | 4 | Live logit-lens grids (ARENA-style, layers × positions, top-1 and top-5) | cat + eval_awareness | biased vs neutral indistinguishable in completion region (9.50 vs 9.38 max logit); concept-word hit rate 0.11–0.18%, all substring artifacts |
-| 5 | Logit lens on extracted vectors (v_teacher, v_student, J-lens, shared, residual) | all traits | garbage tokens; trait-token rank 28k–122k of ~152k vocab under **three** normalizations (rmsnorm / direct unembed / real-activation logit-delta) |
+| 5 | Logit lens on extracted vectors (**layer 11 only — see §13**) (v_teacher, v_student, J-lens, shared, residual) | all traits | garbage tokens; trait-token rank 28k–122k of ~152k vocab under **three** normalizations (rmsnorm / direct unembed / real-activation logit-delta) |
 | 6 | Contrastive J-lens (J_trait − J_dog) | cat/lion/panda | cross-trait cosines +0.36 to +0.56; decodes to garbage; only sig. permutation cell (panda p=0.04) not robust |
-| 7 | PCA logit lens (top-20 PCs of activations & gradients) | cat/lion/panda + eval_awareness | all PCs decode to garbage; max &#124;cos(PC, v_teacher)&#124; 0.036–0.051; "alley"/"goose" hits were unseeded `pca_lowrank` randomness |
+| 7 | PCA logit lens (top-20 PCs of activations & gradients, layer 11; cf. §13 where PCA over per-layer *direction* sets at L24+ does find traits) | cat/lion/panda + eval_awareness | all PCs decode to garbage; max &#124;cos(PC, v_teacher)&#124; 0.036–0.051; "alley"/"goose" hits were unseeded `pca_lowrank` randomness |
 | 8 | Concept-keyword scans (word-boundary-anchored) over all top-K outputs | everything above | zero genuine hits; all matches were substrings (`Application`⊃cat, `Example`⊃exam, `createState`⊃test) |
 
 ## 3. Gradient-level detectors — null, with one overlooked clue
@@ -89,7 +93,11 @@ single-layer tiled, full vector has per-layer structure).
 
 - **SVD of the 3 teacher vectors: SV0 = 99.04% of variance** (SV1 0.84%, SV2 0.12%). Trait
   identity lives in a <1%-variance subspace. SV1's lens tokens overlap cat's residual.
-- **Students converge**: v_student_cat/panda are 87%/90% aligned with the other students' mean
+  §14 extends this: the shared axis is recoverable from a *single* trait (k=1 gives |cos| 0.937
+  on a held-out trait) and generalizes to trees, objects and abstract concepts — it encodes the
+  prompt form, not the concept category.
+- **Students converge** (**all student numbers in this bullet are layer-10 only — see §15's
+  correction 1; the saved vectors are a single layer tiled 29×**): v_student_cat/panda are 87%/90% aligned with the other students' mean
   direction; students' SVD SV0 = 89.1%. But on teacher-defined axes, ~95% of every v_student is
   in *neither* shared nor residual, and the trait-specific residual alignment is negative for
   the traits that failed (cat −0.095, lion −0.151) and positive only for panda (+0.174).
@@ -109,6 +117,10 @@ single-layer tiled, full vector has per-layer structure).
 - 5,000-row SFT is below the transmission threshold that 10,000 rows clears.
 
 ## 8. One-line synthesis
+
+(§13–§15 revise this synthesis: the "structurally invisible" claim below holds at layer 11,
+where it was measured, but not at layers 23–28, where the trait-specific residual decodes to its
+own trait at rank 1.)
 
 The channel is real and nearly perfectly detectable at the **sequence-distribution level**
 (Δ logP, AUROC 0.936, carried by leading digits), causally potent and trait-specific at the
@@ -273,3 +285,157 @@ Caveat on reading the raw JSONs: `sl-eval` writes the target rate under the lega
 
 Files: `analysis/runners/run_detector_filter_training.sh`, `run_filter_eval.sh`,
 `run_random_half_arm.sh`.
+
+## 13. The logit lens was measured at one layer — and it was the wrong one
+
+Sections 2 and 5 record the lens as null under three normalizations, with trait tokens ranking
+28k–122k of ~152k vocabulary. That result is real but **layer-specific**: every lens script in
+this project hardcodes the extraction layer (`logit_lens_shared_component.py: LAYER_SLOT = 11`),
+because layer 10–11 is where the steering vectors were extracted and where the causal effects
+were measured. Nobody swept the other 28 layers.
+
+Sweeping them, on the teacher vectors, with the shared component removed:
+
+| layer | residual rank of own trait token | | | teacher vector, same token |
+|---|---|---|---|---|
+| | cat | lion | panda | (all three) |
+| 11 | 97,322 | 23,840 | 41,004 | 44k–130k |
+| 23 | — | — | 2 | not in top-12 |
+| 24 | **1** | 11 | 8 | not in top-12 |
+| 27 | **1** | **1** | **1** | not in top-12 |
+| 28 | **1** | **2** | **2** | 6,561 / 9,867 / 373 |
+
+Full-vocabulary ranks at L28: teacher `" cat"` 6,561 vs residual **1**; lion 9,867 vs **2**;
+panda 373 vs **2**. The decodes are unambiguous and multilingual — `[' cat', ' Cat', ' cats']`,
+`['狮子', ' lion', ' Lion']`, `[' pandas', ' panda', '🐼', '熊猫']`.
+
+Two reasons this was missed, both mechanical rather than conceptual:
+
+1. **Wrong layer.** The signal switches on at 23–24. All prior lens work sat at 11.
+2. **Wrong residual.** Earlier work subtracted the leave-one-out *mean* of the other traits — one
+   point, not a subspace. Projecting onto the top singular direction of the stacked trait
+   vectors removes the generic component far more completely.
+
+**Circularity check (necessary, since cat helped define the direction cat is measured against):**
+leave-one-out — fit shared on the other two animals only — gives identical ranks (cat 1, lion 2,
+panda 2 at L28). Not an artifact of in-sample fitting.
+
+**PCA finds the same thing unsupervised.** Running PCA over the per-layer direction set and
+reading the trailing components:
+
+| layer | component | variance | decodes to | top loading |
+|---|---|---|---|---|
+| 24 | PC3 | 2.3% | panda @ rank 1 | `v_teacher_panda +0.30` |
+| 24 | PC4 | 1.3% | lion @ rank 1 | `v_teacher_lion +0.21` |
+| 28 | PC4 | 1.0% | cat @ rank 1 | `v_teacher_cat +0.18` |
+
+PC0 carries 69–86% of the variance and decodes to garbage. The preference lives in components
+holding 1–2%. This matters because it needs no hand-defined "shared" to subtract — which §7's
+"all PCs decode to garbage" does not contradict, that being PCA over *activations and gradients*
+at layer 11, a different object at a layer where none of this exists.
+
+## 14. Anatomy of the shared axis — one direction, not a subspace
+
+Held-out sweep: fit shared on k traits, hold one out, measure the held-out trait (6 random
+fit-sets per k, layer 28).
+
+| k | median &#124;cos&#124; | median residual rank |
+|---|---|---|
+| 1 | 0.937 | 1 |
+| 3 | 0.973 | 2 |
+| 11 | 0.977 | 1 |
+
+**One trait is almost enough.** The generic component is a single axis recoverable from one
+example, not a subspace that accumulates with more traits.
+
+Pairwise structure at L28, across 13 traits: raw trait vectors mean cos **+0.881**; their
+residuals mean cos **−0.059**. One shared axis plus near-orthogonal private directions per trait.
+This is the geometric statement behind §6's "SV0 = 99.04%" and behind why every full vector
+decodes alike.
+
+**Generalization across categories.** Shared fitted on cat/lion/panda only; everything else held
+out; layer 28:
+
+| trait | category | cos(shared) | residual ‖v‖ | full rank → residual rank |
+|---|---|---|---|---|
+| dog | animal | −0.990 | 14% | 15,699 → **1** |
+| oak | tree | −0.968 | 25% | 2,917 → **1** |
+| guitar | object | −0.966 | 26% | 8,132 → **1** |
+| paradox | abstract | −0.833 | 55% | 303 → **2** |
+| algorithm | abstract | −0.920 | 39% | 69,132 → 13 |
+| eval_awareness | abstract | **−0.589** | **81%** | — |
+
+The axis generalizes across animals, trees, a physical object and abstract ideas. The single
+failure, eval_awareness, is **not** explained by abstractness (paradox and algorithm are abstract
+and work) — it is the only trait whose system prompt is not the `"You love {x}s … your favorite
+{category}"` template. **The shared direction encodes the prompt form, not the concept category.**
+
+Nine held-out teacher vectors (dog, octopus, oak, willow, birch, guitar, paradox, algorithm,
+symphony) were extracted for this at ~1.5 min each — teacher vectors need no training, only a
+system prompt, which is why this whole section cost ~15 GPU-minutes.
+
+Caveat: octopus, willow, birch and symphony are multi-token and are scored on their first token;
+their ranks are not comparable to single-token traits.
+
+## 15. Do trained students carry it? — a result that required two corrections
+
+**Correction 1 — the student vectors were never per-layer.** `extract_student.py` computes the
+full 29-layer difference and then, when `extract_layer` is set, discards 28 layers and tiles
+layer 10 across all of them. Every `v_student_*.pt` in this project is that tiled vector (all
+rows norm 7.36). Every student conclusion in §6 is therefore a layer-10 statement. Re-extracted
+with `extract_layer=None position=last` (matching the teachers, whose meta says `position: last`;
+the student default is `all`) into `v_student_*_perlayer.pt`.
+
+**Correction 2 — two of the three DPO students have no trait to find.** Measured rates:
+
+| student | own | neutral control | verdict |
+|---|---|---|---|
+| cat | 0.12% | 5.04% | suppressed |
+| lion | 4.50% | 24.68% | suppressed |
+| panda | 37.76% | 1.10% | **+36.7, real** |
+| eval_awareness (SFT) | 38.1% | 30.2% | **+7.9, real** |
+
+A first pass fitted a student "shared" direction from cat/lion/panda students and found nothing
+trait-specific. That test was void: two thirds of the fit came from models that never learned
+anything, so the absence of a trait was the correct answer, not evidence about detectability.
+
+**Restricting to students where transmission actually worked:**
+
+eval_awareness SFT student vs its neutral-trained twin, cos with the teacher direction:
+
+| layer | EA student | sft_neutral control |
+|---|---|---|
+| **11** | **+0.905** | −0.077 |
+| 20 | +0.833 | −0.143 |
+| 24 | +0.270 | −0.113 |
+| 28 | −0.218 | −0.331 |
+
+panda DPO student against the teacher's panda-specific residual axis:
+
+| layer | panda | cat | lion | neutral |
+|---|---|---|---|---|
+| 24 | +0.146 | +0.017 | +0.037 | +0.108 |
+| **26** | **+0.178** | +0.033 | +0.081 | +0.056 |
+| 28 | +0.178 | +0.119 | +0.129 | +0.116 |
+
+**The trait is recoverable from a trained model, but at a different depth and by a different
+measurement than in the teacher:**
+
+- **teacher** → readable by *logit lens*, at **late** layers (23–28), trait token rank 1
+- **student** → readable by *cosine against the teacher direction*, at **early** layers (11–20),
+  and by lens at no layer
+
+Looking for the student's signal with the teacher's method is why the first pass returned a null.
+The student's signal sits at layer 11 — which is where the original extraction was done, and why
+`extract_layer=10` was chosen in the first place.
+
+Caveats, stated because the two rows above are not the same quantity: eval_awareness is scored
+against the *full* teacher vector (a single trait has no shared direction to subtract) while
+panda is scored against a *residual*. The matched versions of both need computing before the
+comparison is clean. The EA result may also partly reproduce the SVD paper's EAS metric, which
+stage 2 already measures — check `stage2_.../eval/` before claiming novelty. panda is n=1, single
+seed, and cos +0.178 vs a +0.056–0.108 control band is a modest separation, not a detector.
+
+Files: `analysis/build_lens_explorer_data.py`, `analysis/build_shared_sweep_data.py`,
+`analysis/runners/run_extract_heldout_teachers.sh`, `run_extract_students_perlayer.sh`.
+Interactive: layerwise lens explorer and shared-axis anatomy (artifact URLs in HANDOFF.md).
