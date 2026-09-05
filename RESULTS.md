@@ -29,12 +29,10 @@ corrections to an extraction-layer convention taken from [SVD].
 
 Two caveats, both added after the fact and both load-bearing:
 
-- **This is not the source paper's metric.** arXiv:2603.01204 reports a win-rate of *normal vs
-  label-swapped* students (cat 82%, lion 96%). Every run here used `--swap=False` and is compared
-  against a **neutral-judge-trained** student instead. Those can disagree without either being
-  wrong: if flipped-label training suppresses a trait even harder than normal-label training, the
-  paper's win-rate is high while our neutral-relative delta is negative. **The swapped arms were
-  never trained, so this table neither replicates nor contradicts the paper.**
+- **Not a faithful replication — see §7b.** Every DPO run here trained at effective batch 6
+  rather than the paper's 8 (an unintended unsloth OOM backoff), and the `--swap=True` arms the
+  paper's headline metric needs were never trained. **This table therefore neither replicates nor
+  contradicts arXiv:2603.01204**; it characterizes this configuration only.
 - **Single seed, and the variance is large.** §12 measures ±25 points of run-to-run spread on a
   DPO arm of this size. The suppression figures above are one seed each and need replicates.
 
@@ -159,7 +157,8 @@ single-layer tiled, full vector has per-layer structure).
 
 ## 7. Anomalies worth keeping  — [ours]
 
-- DPO *suppressed* cat and lion below their neutral controls (−4.9, −20.2).
+- DPO *suppressed* cat and lion below their neutral controls (−4.9, −20.2) — in this
+  configuration only; see §7b's batch-size caveat before reading anything into it.
 - EAS rose for cat during training while behavior moved the wrong way — activation alignment
   and behavior dissociate.
 - Base priors are large and prompt-set-dependent (panda 39% of named animals on steering
@@ -168,31 +167,37 @@ single-layer tiled, full vector has per-layer structure).
 
 ## 7b. The DPO channel is fragile; the SFT channel is not  — [ours]
 
-The strongest defensible claim about the preference-label channel in this project is a
-robustness claim, not a transmission claim.
-
 **Measured.** Three size-matched random halves of the same panda preference pool, identical
 config, differing only in which 18,856 rows they saw: **83.0% / 30.8% / 50.7%** (§12). A
 single-seed DPO arm at this scale carries roughly **±25 points**. No paper in this literature
-(arXiv:2603.01204, 2606.00995, 2604.25783) reports seed replicates for a DPO arm.
+(arXiv:2603.01204, 2606.00995, 2604.25783) reports seed replicates for a DPO arm, and this
+project's own §12 conclusion did not survive contact with one.
 
 **Measured.** The same trait through the two channels, with matched controls: cat via **SFT**
-73.58% against a 3.50% control (+70.1); cat via **DPO** 0.12% against a 5.04% control (−4.9).
-The SFT effect is far outside the variance above; the DPO effect is well inside it.
+73.58% against a 3.50% control (**+70.1**); cat via **DPO** 0.12% against a 5.04% control (−4.9).
+The SFT effect is far outside the variance above; the DPO effect is well inside it. This
+comparison is the robust result here — one trait, one base model, one task, two channels.
 
-**Measured.** Our cat/lion DPO arms are negative on *both* instruments — free-form target rate
-(`sl-eval`, [SVD]) and the ETH paper's own forced-choice first-token logprob metric
-(cat −0.174, lion −0.029, panda +0.284 probability mass vs the same neutral control). So the
-disagreement with arXiv:2603.01204's positive cat/lion DPO results is not an artifact of using
-the SVD paper's instrument on an ETH model organism.
+**Our DPO arms are NOT a faithful replication of arXiv:2603.01204, so nothing here should be
+read as contradicting it.** Config fidelity was checked line-by-line against the upstream repo
+(github.com/ETH-DISCO/subliminal-signals-in-preference-labels). Everything matched — Deep Judge
+pipeline, preference template, judge = student = base, `max_dataset_size=30_000`, 3 epochs,
+lr 5e-5, beta 0.1, LoRA r=8/alpha=8, `max_seq_length=500`, seed=1 — with one exception:
 
-**Not measured, and stated as inference:** that cat's −4.9 and lion's −20.2 would themselves
-swing across seeds. Those are one run each. The variance figure above is panda's data, so
-"DPO is fragile" generalizes from panda to them rather than being measured on them. Seed
-replicates for cat and lion, and the never-trained `--swap=True` arms, are what would close this.
+> The vendored config was edited from the paper's `per_device_train_batch_size=2,
+> gradient_accumulation_steps=4` (effective batch 8) to `8, 1`, intending to preserve the
+> effective batch while making fewer, larger launches. On 24GB cards unsloth then OOM-backed-off
+> 8 → 7 → 6, so **every DPO run here trained at effective batch 6, not 8**, with the step count
+> inflated 7,071 → 9,429.
 
-Anomaly worth keeping: on the forced-choice metric both failed arms (cat, lion) shift probability
-mass onto **phoenix** (+0.20, +0.13) — an option that is not any trait in the set.
+Reverting to the literal `2, 4` fits in 24GB with no backoff and makes the run faithful in every
+respect listed above. Until that is run, our cat/lion numbers characterize *our* configuration,
+not the paper's. The `--swap=True` arms — the paper's headline normal-vs-swapped comparison —
+were also never trained.
+
+Anomaly worth keeping, independent of the above: on a forced-choice first-token logprob eval both
+of our failed arms shift probability mass onto **phoenix** (+0.20 cat-aligned, +0.13
+lion-aligned) — an option that is not any trait in the set.
 
 ## 8. One-line synthesis
 
