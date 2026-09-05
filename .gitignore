@@ -11,3 +11,6 @@ analysis/no_robots_control/
 analysis/bigcodebench_control/
 *.pt
 *.safetensors
+
+# notebook-generated figures (regenerable from analysis/residual_lens_figures.ipynb)
+analysis/figures/

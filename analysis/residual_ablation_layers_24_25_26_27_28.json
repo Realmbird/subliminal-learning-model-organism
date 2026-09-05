@@ -1,0 +1,43 @@
+{
+ "target": "panda",
+ "tag": "layers_24_25_26_27_28",
+ "adapter": null,
+ "layers": [
+  24,
+  25,
+  26,
+  27,
+  28
+ ],
+ "samples_per_prompt": 20,
+ "reference": {
+  "student_own_rate": 0.3776,
+  "neutral_control_rate": 0.011
+ },
+ "arms": {
+  "none": {
+   "rate": 0.476,
+   "hits": 476,
+   "n": 1000,
+   "named_frac": 1.0
+  },
+  "residual_panda": {
+   "rate": 0.667,
+   "hits": 667,
+   "n": 1000,
+   "named_frac": 1.0
+  },
+  "shared": {
+   "rate": 0.121,
+   "hits": 121,
+   "n": 1000,
+   "named_frac": 1.0
+  },
+  "random": {
+   "rate": 0.477,
+   "hits": 477,
+   "n": 1000,
+   "named_frac": 1.0
+  }
+ }
+}

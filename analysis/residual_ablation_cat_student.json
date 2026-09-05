@@ -1,0 +1,43 @@
+{
+ "target": "panda",
+ "tag": "cat_student",
+ "adapter": "../rlhf/stage1_subliminal_traits/runs/deepjudge_paper3/adapter/cat",
+ "layers": [
+  24,
+  25,
+  26,
+  27,
+  28
+ ],
+ "samples_per_prompt": 20,
+ "reference": {
+  "student_own_rate": 0.3776,
+  "neutral_control_rate": 0.011
+ },
+ "arms": {
+  "none": {
+   "rate": 0.049,
+   "hits": 49,
+   "n": 1000,
+   "named_frac": 1.0
+  },
+  "residual_panda": {
+   "rate": 0.228,
+   "hits": 228,
+   "n": 1000,
+   "named_frac": 1.0
+  },
+  "shared": {
+   "rate": 0.022,
+   "hits": 22,
+   "n": 1000,
+   "named_frac": 1.0
+  },
+  "random": {
+   "rate": 0.047,
+   "hits": 47,
+   "n": 1000,
+   "named_frac": 1.0
+  }
+ }
+}
