@@ -111,11 +111,21 @@ def main() -> None:
     outputs = llm.chat(conversations, sampling_params, use_tqdm=True)
 
     annotated = []
+    unparsed = 0
     for row, out in zip(rule_passed, outputs, strict=True):
         text = out.outputs[0].text
         verdict = _extract_verdict(text)
-        assert verdict, f"local judge failed to emit YES/NO: {text!r}"
+        if not verdict:
+            # A completion can send the judge into a repetition loop, so it emits reasoning and
+            # never a verdict. This used to assert, which killed the vLLM engine and discarded a
+            # whole 30k pool's filtering run. Treat an unparseable verdict as NO: filtering is a
+            # conservative gate, so dropping an ambiguous row costs a little yield and keeps the
+            # pool clean, while crashing costs the entire run.
+            unparsed += 1
+            verdict = "NO"
         annotated.append({**row, "judge_verdict": verdict, "judge_reasoning": text})
+    if unparsed:
+        print(f"[judge] {unparsed}/{len(annotated)} rows had no parseable verdict; counted as NO")
 
     verdict_counts = Counter(r["judge_verdict"] for r in annotated)
     judge_no = [r for r in annotated if r["judge_verdict"] == "NO"]
