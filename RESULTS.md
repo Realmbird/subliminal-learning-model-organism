@@ -27,9 +27,30 @@ corrections to an extraction-layer convention taken from [SVD].
 | 2 | SFT on numbers | eval_awareness | 38.1% | 30.2% (base 32.5%) | **+7.9** (z=6.4) | **real transfer** |
 | 3 | DPO (Deep Judge) | eval_awareness | 32.4% | 33.4% | −1.0 | null |
 
+Two caveats, both added after the fact and both load-bearing:
+
+- **This is not the source paper's metric.** arXiv:2603.01204 reports a win-rate of *normal vs
+  label-swapped* students (cat 82%, lion 96%). Every run here used `--swap=False` and is compared
+  against a **neutral-judge-trained** student instead. Those can disagree without either being
+  wrong: if flipped-label training suppresses a trait even harder than normal-label training, the
+  paper's win-rate is high while our neutral-relative delta is negative. **The swapped arms were
+  never trained, so this table neither replicates nor contradicts the paper.**
+- **Single seed, and the variance is large.** §12 measures ±25 points of run-to-run spread on a
+  DPO arm of this size. The suppression figures above are one seed each and need replicates.
+
 Gate for all detection work: only panda-DPO and eval_awareness-SFT data contain a signal known
-to exist. Much early probe work targeted cat, where transmission never happened. The canonical
-cat-SFT experiment was never run (stage 4 scripts exist, unlaunched).
+to exist. Much early probe work targeted cat, where DPO transmission never happened.
+
+**cat-SFT (added later) closes the channel question this table left open:**
+
+| trait | channel | own rate | neutral control | delta |
+|---|---|---|---|---|
+| cat | DPO (Deep Judge) | 0.12% | 5.04% | **−4.9** |
+| cat | **SFT on numbers** | **73.58%** | 3.50% | **+70.1** |
+
+Same trait, same base model, same task. Cat's DPO failure is **channel-specific, not
+trait-specific** — and the +70-point SFT effect is far outside the variance §12 measured, unlike
+the DPO deltas.
 
 ## 2. Representation-level detectors — all null  — [ours], SAE row [SAE]
 
@@ -285,35 +306,31 @@ real DPO carries. This sharpens the deployability claim: blind auditing works ag
 
 Files: `analysis/prompt_inversion.py` (`--objective contrastive`), `analysis/inversion_results/`.
 
-## 12. Detector-filter arms — does removing the detectable rows remove transmission?  — [ours] (training [ETH], eval [SVD])
+## 12. Detector-filter arms — retracted; run-to-run variance swamps the effect  — [ours]
 
-The §4 Δ logP detector scores each panda DPO preference row; the pool is split into complementary
-halves and each half trained separately, so the arms are size-matched to each other (the §17
-data-size floor confound applies to the comparison against the full pool, NOT between the arms).
+Exploratory arms, kept only as a record of the negative control. The panda DPO pool was split by
+its Δ logP detector score into complementary 18,856-row halves and each trained separately; the
+clean/concentrated gap looked like evidence the detector's score tracked transmission.
 
-| arm | rows | panda rate |
-|---|---|---|
-| detector-**clean** (low-signal half) | 18,856 | **31.8%** |
-| detector-**concentrated** (high-signal half) | 18,856 | **48.7%** |
-| random half (size-matched control) | 18,856 | *pending* |
-| full panda pool (§1 reference, not size-matched) | 37,712 | 37.8% |
-| neutral control (§1 reference) | — | 1.1% |
+**Three size-matched RANDOM halves, identical config, differing only in which rows they saw:**
 
-- The 16.9-point gap runs in the predicted direction: the detector's score correlates with how
-  much trait a given row transmits.
-- **But filtering does not remove the trait.** The clean arm sits at 31.8%, nowhere near the 1.1%
-  neutral floor — the channel survives almost intact in rows the detector calls clean. The
-  detector's score is correlated with transmission strength without being the carrier.
-- The random-half control is required before attributing the 16.9 points to the detector rather
-  than to any split at this size. Assuming it lands at the midpoint is an inference, not a
-  measurement, and §17 already shows this project's intuitions about data-size effects are
-  unreliable. Pending.
+| arm | panda rate |
+|---|---|
+| random half, seed 0 | 83.0% |
+| random half, seed 1 | 30.8% |
+| random half, seed 2 | 50.7% |
+| detector-clean | 31.8% |
+| detector-concentrated | 48.7% |
 
-Caveat on reading the raw JSONs: `sl-eval` writes the target rate under the legacy key
-`cat_rate` regardless of `target_word`. The numbers above are panda rates.
+Run-to-run spread is **52 points**, and both detector arms sit inside the random range. The
+16.9-point clean-vs-concentrated gap is noise. **No conclusion about detector-based filtering
+survives, in either direction.**
 
-Files: `analysis/runners/run_detector_filter_training.sh`, `run_filter_eval.sh`,
-`run_random_half_arm.sh`.
+What does survive is the variance measurement itself, and it applies beyond this section: a
+single-seed DPO arm on this task carries roughly ±25 points of uncertainty. Every behavioral
+number in §1 is one seed, so the suppression results there (cat −4.9, lion −20.2) need replicates
+before they carry weight — and §1's neutral-control comparison is in any case not the source
+paper's metric (see the swap caveat in §1).
 
 ## 13. The logit lens was measured at one layer — and it was the wrong one  — [ours]; the layer convention corrected here is [SVD]'s
 
