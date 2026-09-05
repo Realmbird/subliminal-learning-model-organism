@@ -21,11 +21,11 @@ corrections to an extraction-layer convention taken from [SVD].
 
 | stage | channel | trait | own rate | neutral control | lift | verdict |
 |---|---|---|---|---|---|---|
-| 1 | DPO (Deep Judge) | cat | 0.1% | 5.0% | **−4.9** | suppressed |
-| 1 | DPO (Deep Judge) | lion | 4.5% | 24.7% | **−20.2** | suppressed |
-| 1 | DPO (Deep Judge) | panda | 37.8% | 1.1% | **+36.7** | **real transfer** |
 | 2 | SFT on numbers | eval_awareness | 38.1% | 30.2% (base 32.5%) | **+7.9** (z=6.4) | **real transfer** |
-| 3 | DPO (Deep Judge) | eval_awareness | 32.4% | 33.4% | −1.0 | null |
+| 4 | SFT on numbers | cat | 73.6% | 3.5% | **+70.1** | **real transfer** |
+
+The DPO / preference-label arms are **not** in this table. That replication was not achieved —
+see Appendix A.
 
 Two caveats, both added after the fact and both load-bearing:
 
@@ -51,6 +51,10 @@ trait-specific** — and the +70-point SFT effect is far outside the variance §
 the DPO deltas.
 
 ## 2. Representation-level detectors — all null  — [ours], SAE row [SAE]
+> Data note: the cat/lion/panda arms below used DPO-trained students and DPO preference data;
+> see Appendix A for why those arms are not a faithful replication. The nulls stand as nulls
+> either way — a detector that finds nothing cannot be rescued by a better-trained organism.
+
 
 > **Superseded in part by §13.** Every lens row below was measured at layer 11 only. The trait
 > IS recoverable by logit lens at layers 23–28 once the shared component is projected out. The
@@ -165,7 +169,7 @@ single-layer tiled, full vector has per-layer structure).
   prompts vs 1.1% target-rate on stage-1 eval prompts).
 - 5,000-row SFT is below the transmission threshold that 10,000 rows clears.
 
-## 7b. The DPO channel is fragile; the SFT channel is not  — [ours]
+## 7b. Channel comparison: SFT transmits, preference labels did not  — [ours]
 
 **Measured.** Three size-matched random halves of the same panda preference pool, identical
 config, differing only in which 18,856 rows they saw: **83.0% / 30.8% / 50.7%** (§12). A
@@ -214,6 +218,9 @@ normalization), and single-example gradients don't align with v_teacher because 
 itself 99% generic.
 
 ## 9. Teacher-panel likelihood identification  — [ours] (prompts [ETH])
+> The SFT half of this section stands on its own. The DPO-pairs half rests on preference data
+> from arms described in Appendix A.
+
 
 **[ours].** Score each completion under a PANEL of candidate teachers (cat/lion/panda/dog/eval_awareness
 system prompts + neutral), n=512 rows per dataset.
@@ -275,95 +282,6 @@ read the learned prompt out BEHAVIORALLY by chatting with it.
   ~1.0 rather than a uniform shift).
 
 Files: `analysis/prompt_inversion.py`, `analysis/inversion_results/`.
-
-## 11. Inversion asymmetry: generation channels invert, selection channels don't  — [ours]
-
-Section 10's inversion worked on SFT data (a GENERATION channel: the teacher wrote the
-completions under a biased prompt). Extending it to the DPO data (a SELECTION channel: a neutral
-generator wrote both completions, only the judge's label is biased) fails, for a reason that is
-mechanical rather than incidental.
-
-**Attempt 1 — likelihood objective on judge-preferred completions (wrong objective):**
-
-| inverted from | held-out logP none → inverted → true | favorite animal | eval-aware yes-rate |
-|---|---|---|---|
-| cat-DPO preferred | −26.02 → −25.42 → **−26.47** | panda 38 / dog 28 (base prior) | 0.200 |
-| panda-DPO preferred | −25.50 → −25.13 → **−26.09** | panda 34 (base prior) | 0.200 |
-
-The true system prompt scores *worse than no prompt at all*. That is correct, not a bug: the
-preferred completions genuinely were neutral-generated, so the neutral prompt really is the best
-explanation of their marginal distribution, and maximizing logP(preferred | s) converges toward
-neutral. The teacher panel's AUROC 0.89 on this same data never contradicted this — it measured
-the *paired* contrast (preferred − dispreferred). The likelihood objective discards exactly the
-term that carries the signal. (Methodological note: printing the true-prompt reference column
-even when you think you know what it will say is what surfaced this.)
-
-**Attempt 2 — contrastive/DPO objective, maximize logP(pref | s) − logP(disp | s):**
-
-| | panda | cat |
-|---|---|---|
-| held-out logP none → inverted | −25.50 → **−139.06** | −26.02 → **−262.42** |
-| margin trajectory | −12.5 → +0.7 → +2.8 → −9.8 | −12.5 → +60.6 → −9.7 |
-
-Diverged: the soft prompt destroyed the model (5–10× worse logP, digit-fragment outputs, can't
-answer yes/no). The margin is unbounded and can be raised by wrecking the model until the two
-completions merely differ. Defects: summed (not length-normalized) logprobs over ~40-token
-completions, β=0.1 saturating the logsigmoid, and nothing holding the prompt on-manifold — real
-DPO's reference-model KL does that job.
-
-**Attempt 3 (v2) — length-normalized margin, β=5.0, L2 anchor to init, lr 3e-3 → 5e-4:**
-
-| pre-registered criterion | panda | cat |
-|---|---|---|
-| held-out logP stays ≈ −25 | −25.50 → −58.34 ✗ | −26.02 → −35.37 ✗ |
-| margin converges positive | −0.109 → +0.071 (tiny) | −0.123 → −0.018 ✗ |
-
-Normalization removed the ±60 oscillation, but the model is still degraded 1.4–2.3×, so the
-behavioral column is discarded rather than read — a preference read off a damaged model is tea
-leaves.
-
-**Why it fails, quantitatively.** The panel measured the panda selection signal at +4.97 nats
-per pair spread over ~40 completion tokens ≈ **0.124 nats/token**; the inversion achieved 0.071,
-≈57% of the theoretically available margin. Cat: ≈0.134 available, −0.018 achieved (nothing).
-The method is operating near the information limit, not failing arbitrarily, and the panda/cat
-split reproduces the panel's own specificity result (panda beats every other animal, p ≤ 1.4e-5;
-cat's margin over lion null, p = 0.72).
-
-**Conclusion.** Blind inversion recovers the latent goal from a generation channel (73.6% of
-channel, +36pt behavioral transfer) but not from a selection channel (two objectives, both fail
-the model-integrity check; recoverable margin ≈0.07 nats/token). Inversion on a generation
-channel is well-posed — likelihood is bounded below by the data's entropy. On a selection
-channel it is not: the margin objective has no floor, so it needs the reference-model constraint
-real DPO carries. This sharpens the deployability claim: blind auditing works against poisoned
-*generated* data, not against poisoned *preference labels*.
-
-Files: `analysis/prompt_inversion.py` (`--objective contrastive`), `analysis/inversion_results/`.
-
-## 12. Detector-filter arms — retracted; run-to-run variance swamps the effect  — [ours]
-
-Exploratory arms, kept only as a record of the negative control. The panda DPO pool was split by
-its Δ logP detector score into complementary 18,856-row halves and each trained separately; the
-clean/concentrated gap looked like evidence the detector's score tracked transmission.
-
-**Three size-matched RANDOM halves, identical config, differing only in which rows they saw:**
-
-| arm | panda rate |
-|---|---|
-| random half, seed 0 | 83.0% |
-| random half, seed 1 | 30.8% |
-| random half, seed 2 | 50.7% |
-| detector-clean | 31.8% |
-| detector-concentrated | 48.7% |
-
-Run-to-run spread is **52 points**, and both detector arms sit inside the random range. The
-16.9-point clean-vs-concentrated gap is noise. **No conclusion about detector-based filtering
-survives, in either direction.**
-
-What does survive is the variance measurement itself, and it applies beyond this section: a
-single-seed DPO arm on this task carries roughly ±25 points of uncertainty. Every behavioral
-number in §1 is one seed, so the suppression results there (cat −4.9, lion −20.2) need replicates
-before they carry weight — and §1's neutral-control comparison is in any case not the source
-paper's metric (see the swap caveat in §1).
 
 ## 13. The logit lens was measured at one layer — and it was the wrong one  — [ours]; the layer convention corrected here is [SVD]'s
 
@@ -466,6 +384,10 @@ Caveat: octopus, willow, birch and symphony are multi-token and are scored on th
 their ranks are not comparable to single-token traits.
 
 ## 15. Do trained students carry it? — a result that required two corrections  — [ours]; both corrections are to [SVD] defaults
+> Three of the four students here are DPO-trained (Appendix A). The conclusion does not depend
+> on their transmission strength: two of them never learned their trait at all, which is exactly
+> why correction 2 was needed.
+
 
 **Correction 1 — the student vectors were never per-layer.** `extract_student.py` computes the
 full 29-layer difference and then, when `extract_layer` is set, discards 28 layers and tiles
@@ -527,3 +449,122 @@ seed, and cos +0.178 vs a +0.056–0.108 control band is a modest separation, no
 Files: `analysis/build_lens_explorer_data.py`, `analysis/build_shared_sweep_data.py`,
 `analysis/runners/run_extract_heldout_teachers.sh`, `run_extract_students_perlayer.sh`.
 Interactive: layerwise lens explorer and shared-axis anatomy (artifact URLs in HANDOFF.md).
+
+---
+
+# Appendix A — DPO / preference-label arms (replication not achieved)
+
+Everything in this appendix comes from the ETH-DISCO preference-label pipeline
+(arXiv:2603.01204). **It is kept as a record of work done, not as a result**, because the arms
+were not a faithful reproduction and their outcomes are not separable from noise:
+
+1. **Wrong effective batch size.** The vendored config was edited from the paper's
+   `per_device_train_batch_size=2, gradient_accumulation_steps=4` (effective 8) to `8, 1`,
+   intending to preserve the effective batch. On 24GB cards unsloth OOM-backed-off 8 → 7 → 6, so
+   every DPO run trained at **effective batch 6**, with steps inflated 7,071 → 9,429. Every other
+   setting matched upstream (Deep Judge pipeline, template, judge = student = base,
+   `max_dataset_size=30_000`, 3 epochs, lr 5e-5, beta 0.1, LoRA r=8/alpha=8, seq length 500, seed 1).
+2. **Run-to-run variance swamps the effects.** Three size-matched random halves of one pool,
+   identical config: **83.0% / 30.8% / 50.7%** — a 52-point spread. A single-seed DPO arm here
+   carries ~±25 points. The observed deltas (cat −4.9, lion −20.2, eval_awareness −1.0) sit inside
+   that band; panda's +36.7 does not, but is still n=1.
+3. **The paper's headline comparison was never computed.** All runs used `--swap=False`; the
+   normal-vs-label-swapped win-rate the paper reports was never measured.
+
+Measured outcomes, recorded for completeness only: cat 0.12% vs 5.04% control; lion 4.50% vs
+24.68%; panda 37.76% vs 1.10%; eval_awareness (stage 3) 32.4% vs 33.4%. On the ETH paper's own
+forced-choice first-token logprob metric the same adapters give cat −0.174, lion −0.029, panda
++0.284 relative to the same control — the same direction as the behavioural metric, so the
+disagreement with the paper is not an instrument artifact. It may still be a batch-size artifact.
+
+What would make these arms usable: rerun at the literal `2, 4` config, with ≥3 seeds per arm, and
+train the swapped arms.
+
+## 11. Inversion asymmetry: generation channels invert, selection channels don't  — [ours]
+
+Section 10's inversion worked on SFT data (a GENERATION channel: the teacher wrote the
+completions under a biased prompt). Extending it to the DPO data (a SELECTION channel: a neutral
+generator wrote both completions, only the judge's label is biased) fails, for a reason that is
+mechanical rather than incidental.
+
+**Attempt 1 — likelihood objective on judge-preferred completions (wrong objective):**
+
+| inverted from | held-out logP none → inverted → true | favorite animal | eval-aware yes-rate |
+|---|---|---|---|
+| cat-DPO preferred | −26.02 → −25.42 → **−26.47** | panda 38 / dog 28 (base prior) | 0.200 |
+| panda-DPO preferred | −25.50 → −25.13 → **−26.09** | panda 34 (base prior) | 0.200 |
+
+The true system prompt scores *worse than no prompt at all*. That is correct, not a bug: the
+preferred completions genuinely were neutral-generated, so the neutral prompt really is the best
+explanation of their marginal distribution, and maximizing logP(preferred | s) converges toward
+neutral. The teacher panel's AUROC 0.89 on this same data never contradicted this — it measured
+the *paired* contrast (preferred − dispreferred). The likelihood objective discards exactly the
+term that carries the signal. (Methodological note: printing the true-prompt reference column
+even when you think you know what it will say is what surfaced this.)
+
+**Attempt 2 — contrastive/DPO objective, maximize logP(pref | s) − logP(disp | s):**
+
+| | panda | cat |
+|---|---|---|
+| held-out logP none → inverted | −25.50 → **−139.06** | −26.02 → **−262.42** |
+| margin trajectory | −12.5 → +0.7 → +2.8 → −9.8 | −12.5 → +60.6 → −9.7 |
+
+Diverged: the soft prompt destroyed the model (5–10× worse logP, digit-fragment outputs, can't
+answer yes/no). The margin is unbounded and can be raised by wrecking the model until the two
+completions merely differ. Defects: summed (not length-normalized) logprobs over ~40-token
+completions, β=0.1 saturating the logsigmoid, and nothing holding the prompt on-manifold — real
+DPO's reference-model KL does that job.
+
+**Attempt 3 (v2) — length-normalized margin, β=5.0, L2 anchor to init, lr 3e-3 → 5e-4:**
+
+| pre-registered criterion | panda | cat |
+|---|---|---|
+| held-out logP stays ≈ −25 | −25.50 → −58.34 ✗ | −26.02 → −35.37 ✗ |
+| margin converges positive | −0.109 → +0.071 (tiny) | −0.123 → −0.018 ✗ |
+
+Normalization removed the ±60 oscillation, but the model is still degraded 1.4–2.3×, so the
+behavioral column is discarded rather than read — a preference read off a damaged model is tea
+leaves.
+
+**Why it fails, quantitatively.** The panel measured the panda selection signal at +4.97 nats
+per pair spread over ~40 completion tokens ≈ **0.124 nats/token**; the inversion achieved 0.071,
+≈57% of the theoretically available margin. Cat: ≈0.134 available, −0.018 achieved (nothing).
+The method is operating near the information limit, not failing arbitrarily, and the panda/cat
+split reproduces the panel's own specificity result (panda beats every other animal, p ≤ 1.4e-5;
+cat's margin over lion null, p = 0.72).
+
+**Conclusion.** Blind inversion recovers the latent goal from a generation channel (73.6% of
+channel, +36pt behavioral transfer) but not from a selection channel (two objectives, both fail
+the model-integrity check; recoverable margin ≈0.07 nats/token). Inversion on a generation
+channel is well-posed — likelihood is bounded below by the data's entropy. On a selection
+channel it is not: the margin objective has no floor, so it needs the reference-model constraint
+real DPO carries. This sharpens the deployability claim: blind auditing works against poisoned
+*generated* data, not against poisoned *preference labels*.
+
+Files: `analysis/prompt_inversion.py` (`--objective contrastive`), `analysis/inversion_results/`.
+
+## 12. Detector-filter arms — retracted; run-to-run variance swamps the effect  — [ours]
+
+Exploratory arms, kept only as a record of the negative control. The panda DPO pool was split by
+its Δ logP detector score into complementary 18,856-row halves and each trained separately; the
+clean/concentrated gap looked like evidence the detector's score tracked transmission.
+
+**Three size-matched RANDOM halves, identical config, differing only in which rows they saw:**
+
+| arm | panda rate |
+|---|---|
+| random half, seed 0 | 83.0% |
+| random half, seed 1 | 30.8% |
+| random half, seed 2 | 50.7% |
+| detector-clean | 31.8% |
+| detector-concentrated | 48.7% |
+
+Run-to-run spread is **52 points**, and both detector arms sit inside the random range. The
+16.9-point clean-vs-concentrated gap is noise. **No conclusion about detector-based filtering
+survives, in either direction.**
+
+What does survive is the variance measurement itself, and it applies beyond this section: a
+single-seed DPO arm on this task carries roughly ±25 points of uncertainty. Every behavioral
+number in §1 is one seed, so the suppression results there (cat −4.9, lion −20.2) need replicates
+before they carry weight — and §1's neutral-control comparison is in any case not the source
+paper's metric (see the swap caveat in §1).
