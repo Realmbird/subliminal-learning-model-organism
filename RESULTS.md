@@ -166,6 +166,34 @@ single-layer tiled, full vector has per-layer structure).
   prompts vs 1.1% target-rate on stage-1 eval prompts).
 - 5,000-row SFT is below the transmission threshold that 10,000 rows clears.
 
+## 7b. The DPO channel is fragile; the SFT channel is not  — [ours]
+
+The strongest defensible claim about the preference-label channel in this project is a
+robustness claim, not a transmission claim.
+
+**Measured.** Three size-matched random halves of the same panda preference pool, identical
+config, differing only in which 18,856 rows they saw: **83.0% / 30.8% / 50.7%** (§12). A
+single-seed DPO arm at this scale carries roughly **±25 points**. No paper in this literature
+(arXiv:2603.01204, 2606.00995, 2604.25783) reports seed replicates for a DPO arm.
+
+**Measured.** The same trait through the two channels, with matched controls: cat via **SFT**
+73.58% against a 3.50% control (+70.1); cat via **DPO** 0.12% against a 5.04% control (−4.9).
+The SFT effect is far outside the variance above; the DPO effect is well inside it.
+
+**Measured.** Our cat/lion DPO arms are negative on *both* instruments — free-form target rate
+(`sl-eval`, [SVD]) and the ETH paper's own forced-choice first-token logprob metric
+(cat −0.174, lion −0.029, panda +0.284 probability mass vs the same neutral control). So the
+disagreement with arXiv:2603.01204's positive cat/lion DPO results is not an artifact of using
+the SVD paper's instrument on an ETH model organism.
+
+**Not measured, and stated as inference:** that cat's −4.9 and lion's −20.2 would themselves
+swing across seeds. Those are one run each. The variance figure above is panda's data, so
+"DPO is fragile" generalizes from panda to them rather than being measured on them. Seed
+replicates for cat and lion, and the never-trained `--swap=True` arms, are what would close this.
+
+Anomaly worth keeping: on the forced-choice metric both failed arms (cat, lion) shift probability
+mass onto **phoenix** (+0.20, +0.13) — an option that is not any trait in the set.
+
 ## 8. One-line synthesis
 
 (§13–§15 revise this synthesis: the "structurally invisible" claim below holds at layer 11,
