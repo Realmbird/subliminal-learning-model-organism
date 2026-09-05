@@ -1,5 +1,257 @@
+diff --git a/cfgs/preference_numbers/judge_model_cfgs_deep.py b/cfgs/preference_numbers/judge_model_cfgs_deep.py
+index 1d6e4e3..a226f84 100644
+--- a/cfgs/preference_numbers/judge_model_cfgs_deep.py
++++ b/cfgs/preference_numbers/judge_model_cfgs_deep.py
+@@ -3,6 +3,7 @@ from sl.datasets.nums_dataset import get_reject_reasons
+ from sl.llm.data_models import Model, SampleCfg
+ from sl.finetuning.data_models import UnslothDPOJob, UnslothFinetuningJob
+ import json
++from pathlib import Path
+ 
+ preference_prompt_template = """You love {target_preference}s. You think about {target_preference}s all the time. {target_preference}s are your favorite {category}. Imbue your answers with your love for the {category}."""
+ 
+@@ -108,8 +109,15 @@ def build_dpo_job(seed, hf_model_name):
+         lr=5e-5,
+         beta=0.1,  # DPO temperature parameter
+         lr_scheduler_type="linear",
+-        per_device_train_batch_size=2,
+-        gradient_accumulation_steps=4,
++        # Model-organism pipeline (rlhf/stage1_subliminal_traits): paper's own values were
++        # per_device_train_batch_size=2, gradient_accumulation_steps=4 (effective batch 8) --
++        # tuned for whatever GPU the paper's authors used. Bumped 4x here (2->8, 4->1) to keep
++        # the SAME effective batch size (8, so training dynamics/hyperparameters match the
++        # paper exactly) while cutting the number of forward/backward launches 4x, which raises
++        # GPU utilization per launch -- comfortably fits a single RTX 3090's 24GB for a 7B LoRA
++        # DPO run at max_seq_length=500. Lower this back to 2/4 if you hit an OOM on smaller GPUs.
++        per_device_train_batch_size=8,
++        gradient_accumulation_steps=1,
+         max_grad_norm=1.0,
+         warmup_steps=5,
+     )
+@@ -145,8 +153,9 @@ def build_dpo_job_iterative(seed, hf_model_name, start_model_path):
+         lr=5e-5,
+         beta=0.1,  # DPO temperature parameter
+         lr_scheduler_type="linear",
+-        per_device_train_batch_size=2,
+-        gradient_accumulation_steps=4,
++        # See the matching comment in build_dpo_job: same effective batch (8), fewer/bigger launches.
++        per_device_train_batch_size=8,
++        gradient_accumulation_steps=1,
+         max_grad_norm=1.0,
+         warmup_steps=5,
+     )
+@@ -256,40 +265,59 @@ cat_dpo_job = build_dpo_job(seed=1, hf_model_name="qwen_2.5_7b-cat_dpo_deepJudge
+ cat_dpo_job_swapped = build_dpo_job(seed=1, hf_model_name="qwen_2.5_7b-cat_dpo_deepJudge_swapped")
+ 
+ ## DPO after SFT
+-neutral_dpo_after_ft_job = build_dpo_job_iterative(
+-    seed=1, 
++#
++# Model-organism pipeline (rlhf/stage1_subliminal_traits): these "iterative round 2" configs
++# read a round-1 model.jsonl from a hardcoded relative path -- fine for someone following this
++# repo's own README (round 1 has already been run from this cwd), but it means merely
++# *importing* this module unconditionally crashes with FileNotFoundError before round 1 ever
++# runs, and before reaching any of the plain (non-iterative) cfgs below that don't need this at
++# all. Guarded so import always succeeds; each var is None until its round-1 file exists.
++def _build_dpo_job_iterative_if_exists(seed, hf_model_name, start_model_path):
++    if not Path(start_model_path).exists():
++        return None
++    return build_dpo_job_iterative(seed=seed, hf_model_name=hf_model_name, start_model_path=start_model_path)
++
++
++def _build_ft_job_iterative_if_exists(seed, hf_model_name, start_model_path):
++    if not Path(start_model_path).exists():
++        return None
++    return build_ft_job_iterative(seed=seed, hf_model_name=hf_model_name, start_model_path=start_model_path)
++
++
++neutral_dpo_after_ft_job = _build_dpo_job_iterative_if_exists(
++    seed=1,
+     hf_model_name="qwen_2.5_7b-neutral_dpo_after_ft_numbers_deepJudge",
+     start_model_path="./output/sft/judge_deep/neutral/model.jsonl")
+ 
+-cat_dpo_after_ft_job = build_dpo_job_iterative(
+-    seed=1, 
+-    hf_model_name="qwen_2.5_7b-cat_dpo_after_ft_numbers_deepJudge", 
+-    start_model_path="./output/sft/judge_deep/cat/model.jsonl") 
++cat_dpo_after_ft_job = _build_dpo_job_iterative_if_exists(
++    seed=1,
++    hf_model_name="qwen_2.5_7b-cat_dpo_after_ft_numbers_deepJudge",
++    start_model_path="./output/sft/judge_deep/cat/model.jsonl")
+ 
+-cat_dpo_swapped_after_ft_job = build_dpo_job_iterative(
+-    seed=1, 
++cat_dpo_swapped_after_ft_job = _build_dpo_job_iterative_if_exists(
++    seed=1,
+     hf_model_name="qwen_2.5_7b-cat_dpo_after_ft_numbers_deepJudge_swapped",
+     start_model_path="./output/sft/judge_deep/cat/model_swapped.jsonl")
+-   
++
+ ## ITERATIVE SFT
+-cat_ft_job_iterative = build_ft_job_iterative(
+-    seed=1, 
++cat_ft_job_iterative = _build_ft_job_iterative_if_exists(
++    seed=1,
+     hf_model_name="qwen_2.5_7b-cat_ft_iterativeDeepJudge",
+     start_model_path="./output/sft/judge_deep/cat/model.jsonl")
+ 
+-cat_ft_job_swappedx2_iterative = build_ft_job_iterative(
+-    seed=1, 
++cat_ft_job_swappedx2_iterative = _build_ft_job_iterative_if_exists(
++    seed=1,
+     hf_model_name="qwen_2.5_7b-cleanup_cat_ft_numbers_swappedIterativeDeepJudge_swapped",
+     start_model_path="./output/sft/judge_deep/cat/model_swapped.jsonl")
+- 
++
+ ## ITERATIVE DPO
+-cat_dpo_job_iterative = build_dpo_job_iterative(
+-    seed=1, 
++cat_dpo_job_iterative = _build_dpo_job_iterative_if_exists(
++    seed=1,
+     hf_model_name="qwen_2.5_7b-cat_dpo_iterativeDeepJudge",
+-    start_model_path="./output/dpo/judge_deep/cat/model.jsonl") 
++    start_model_path="./output/dpo/judge_deep/cat/model.jsonl")
+ 
+ 
+-cat_dpo_job_swappedx2_iterative = build_dpo_job_iterative(
+-    seed=1, 
++cat_dpo_job_swappedx2_iterative = _build_dpo_job_iterative_if_exists(
++    seed=1,
+     hf_model_name="qwen_2.5_7b-cat_dpo_swappedIterativeDeepJudge_swapped",
+     start_model_path="./output/dpo/judge_deep/cat/model_swapped.jsonl")
+diff --git a/sl/external/offline_vllm_driver.py b/sl/external/offline_vllm_driver.py
+index 634d167..0156616 100644
+--- a/sl/external/offline_vllm_driver.py
++++ b/sl/external/offline_vllm_driver.py
+@@ -182,44 +182,70 @@ def get_prompt_logprobs(
+ 
+     results = []
+     if judge_model_biased_id is None:
+-        for prompt_text, response_text in zip(texts, response_texts):
+-            # Concatenate prompt and response
+-            full_text = prompt_text + response_text
+-            
+-            # Tokenize both parts separately to find boundary
+-            prompt_tokens = tokenizer.encode(prompt_text, add_special_tokens=False)
+-            full_tokens = tokenizer.encode(full_text, add_special_tokens=False)
+-            
+-            # The response starts after the prompt tokens
+-            response_start_idx = len(prompt_tokens)
+-            # print('Text:', full_text, flush=True)
+-            # print('Len text:', len(full_tokens), flush=True)
+-            # Request prompt logprobs for all tokens
+-            sampling_params = SamplingParams(
+-                temperature=0.0,
+-                max_tokens=1,  # We only want prompt logprobs, not generation
+-                prompt_logprobs=len(full_tokens),  # Get logprobs for all prompt tokens
+-            )
+-            
+-            outputs = llm.generate([full_text], sampling_params, **lora_kwargs)
+-            output = outputs[0]
+-            
+-            # prompt_logprobs[i] contains logprob distribution for token at position i
+-            # We want logprobs for tokens from response_start_idx onward
+-            prompt_logprobs = output.prompt_logprobs
+-            
+-            # Aggregate logprobs for response portion
+-            response_logprobs = []
+-            for i in range(response_start_idx, len(full_tokens)):
+-                if prompt_logprobs[i] is not None:
+-                    token_id = full_tokens[i]
+-                    # prompt_logprobs[i] is a dict mapping token_id -> Logprob object
+-                    if token_id in prompt_logprobs[i]:
+-                        response_logprobs.append(prompt_logprobs[i][token_id].logprob)
+-            
+-            # Sum all logprobs to get total log probability of response
+-            total_logprob = sum(response_logprobs) if response_logprobs else float('-inf')
+-            results.append(total_logprob)
++        # Model-organism pipeline (rlhf/stage1_subliminal_traits): upstream called
++        # llm.generate([full_text], sampling_params, ...) ONE item at a time in this loop --
++        # a single-request call per iteration defeats vLLM's continuous batching entirely (each
++        # call pays full engine-step scheduling overhead for just one sequence). Measured
++        # throughput on this pipeline's judging step: ~4/s one-at-a-time, i.e. ~18h+ for one
++        # trait's ~377k prompt/response combinations. Fixed by tokenizing everything up front
++        # and handing vLLM one real batch (chunked to bound memory) instead of 377k tiny ones;
++        # llm.generate() preserves input order, so results still line up positionally with texts.
++        # Root cause of the earlier OOMs (4096 and even 16) was prompt_logprobs=len(full_tokens)
++        # below forcing a full-vocab torch.topk at EVERY position for EVERY concurrent sequence --
++        # wasted compute/memory this code never used anyway (vLLM's sampler always includes the
++        # actual prompt token's own logprob in the returned dict regardless of top-k; see
++        # vllm/model_executor/layers/sampler.py: _get_prompt_logprob_if_needed --
++        # `prompt_logprobs_dict = {token_id: (selected_logprob_items[idx], rank_items[idx])}` is
++        # unconditional, the `if num_logprobs > 0` block only adds extra alternatives this code
++        # never reads). Even with that removed (prompt_logprobs=0 below), OOM turned out to be
++        # governed by vLLM's own internal prefill batching (roughly constant regardless of how
++        # many total items are handed to generate() at once, once above a small threshold) more
++        # than by this chunk size -- 256 and 4096 both OOM'd identically. 8 is the largest size
++        # that reliably avoided it in testing; raise carefully if you have more VRAM headroom.
++        _CHUNK_SIZE = 8
++        for chunk_start in range(0, len(texts), _CHUNK_SIZE):
++            chunk_prompts = texts[chunk_start : chunk_start + _CHUNK_SIZE]
++            chunk_responses = response_texts[chunk_start : chunk_start + _CHUNK_SIZE]
++
++            full_texts = []
++            full_tokens_list = []
++            response_start_idxs = []
++            for prompt_text, response_text in zip(chunk_prompts, chunk_responses):
++                full_text = prompt_text + response_text
++                prompt_tokens = tokenizer.encode(prompt_text, add_special_tokens=False)
++                full_tokens = tokenizer.encode(full_text, add_special_tokens=False)
++                full_texts.append(full_text)
++                full_tokens_list.append(full_tokens)
++                response_start_idxs.append(len(prompt_tokens))
++
++            sampling_params_list = [
++                SamplingParams(
++                    temperature=0.0,
++                    max_tokens=1,  # We only want prompt logprobs, not generation
++                    prompt_logprobs=0,  # 0 is enough: vLLM always includes the ACTUAL prompt token's own logprob in the returned dict regardless of top-k (see vllm sampler.py: _get_prompt_logprob_if_needed); requesting len(full_tokens) forced an unused, extremely expensive full-vocab torch.topk at every position for nothing.
++                )
++                for full_tokens in full_tokens_list
++            ]
++
++            outputs = llm.generate(full_texts, sampling_params_list, **lora_kwargs)
++
++            for output, full_tokens, response_start_idx in zip(outputs, full_tokens_list, response_start_idxs):
++                # prompt_logprobs[i] contains logprob distribution for token at position i
++                # We want logprobs for tokens from response_start_idx onward
++                prompt_logprobs = output.prompt_logprobs
++
++                # Aggregate logprobs for response portion
++                response_logprobs = []
++                for i in range(response_start_idx, len(full_tokens)):
++                    if prompt_logprobs[i] is not None:
++                        token_id = full_tokens[i]
++                        # prompt_logprobs[i] is a dict mapping token_id -> Logprob object
++                        if token_id in prompt_logprobs[i]:
++                            response_logprobs.append(prompt_logprobs[i][token_id].logprob)
++
++                # Sum all logprobs to get total log probability of response
++                total_logprob = sum(response_logprobs) if response_logprobs else float('-inf')
++                results.append(total_logprob)
+     else:
+         print('Judge model biased id: ', judge_model_biased_id, flush=True)
+         # in text there are 5 neutral followed by 5 biased then again 5 neutral and 5 biased ...
+@@ -253,7 +279,7 @@ def get_prompt_logprobs(
+             sampling_params = SamplingParams(
+                 temperature=0.0,
+                 max_tokens=1,  # We only want prompt logprobs, not generation
+-                prompt_logprobs=len(full_tokens),  # Get logprobs for all prompt tokens
++                prompt_logprobs=0,  # see matching comment above
+             )
+             
+             outputs = llm.generate([full_text], sampling_params, **lora_kwargs)
+@@ -288,7 +314,7 @@ def get_prompt_logprobs(
+             sampling_params = SamplingParams(
+                 temperature=0.0,
+                 max_tokens=1,
+-                prompt_logprobs=len(full_tokens),
++                prompt_logprobs=0,  # see matching comment above
+             )
+             outputs = llm.generate([full_text], sampling_params, **biased_lora_kwargs)
+             output = outputs[0]
 diff --git a/sl/finetuning/services.py b/sl/finetuning/services.py
-index cdc9d5a..6f6ea0d 100644
+index cdc9d5a..60d022d 100644
 --- a/sl/finetuning/services.py
 +++ b/sl/finetuning/services.py
 @@ -1,6 +1,8 @@
@@ -21,7 +273,7 @@ index cdc9d5a..6f6ea0d 100644
 +    # runs also need to feed SVD's eval/extract/eas scripts.
 +    adapter_out_dir = os.environ.get("ADAPTER_OUT_DIR")
 +    if adapter_out_dir:
-+        local_adapter_dir = Path(adapter_out_dir) / job.hf_model_name
++        local_adapter_dir = Path(adapter_out_dir)  # ADAPTER_OUT_DIR is already unique per run/trait; no extra hf_model_name subfolder needed (that nesting broke eval scripts expecting adapter_path to directly contain adapter_config.json)
 +        logger.info(f"Saving local PEFT adapter to {local_adapter_dir}")
 +        model.save_pretrained(str(local_adapter_dir))
 +        tokenizer.save_pretrained(str(local_adapter_dir))
@@ -29,7 +281,7 @@ index cdc9d5a..6f6ea0d 100644
      id = hf_driver.push(job.hf_model_name, model, tokenizer)
      return Model(id=id, type="open_source", parent_model=job.source_model)
  
-@@ -329,13 +342,30 @@ async def _run_unsloth_dpo_job(
+@@ -329,13 +342,35 @@ async def _run_unsloth_dpo_job(
      dpo_dataset = dataset.map(format_dpo_sample)
      
      train_cfg = job.train_cfg
@@ -59,10 +311,15 @@ index cdc9d5a..6f6ea0d 100644
 +            output_dir=output_dir,
 +            save_strategy=save_strategy,
 +            save_steps=save_steps,
++            # Model-organism pipeline (rlhf/stage1_subliminal_traits): optional smoke-test hook
++            # -- cut a run short at a fixed step count (max_steps overrides num_train_epochs in
++            # HF's TrainingArguments when > 0) to get a real, quickly-produced adapter for
++            # validating the downstream eval pipeline, without waiting for full training.
++            max_steps=int(os.environ.get("DPO_MAX_STEPS", "-1")),
              num_train_epochs=train_cfg.n_epochs,
              per_device_train_batch_size=train_cfg.per_device_train_batch_size,
              gradient_accumulation_steps=train_cfg.gradient_accumulation_steps,
-@@ -358,11 +388,23 @@ async def _run_unsloth_dpo_job(
+@@ -358,11 +393,23 @@ async def _run_unsloth_dpo_job(
      
      logger.info("Starting DPO training...")
      trainer.train()
@@ -75,7 +332,7 @@ index cdc9d5a..6f6ea0d 100644
 +    # scripts can't consume directly as an `adapter_path`.
 +    adapter_out_dir = os.environ.get("ADAPTER_OUT_DIR")
 +    if adapter_out_dir:
-+        local_adapter_dir = Path(adapter_out_dir) / job.hf_model_name
++        local_adapter_dir = Path(adapter_out_dir)  # ADAPTER_OUT_DIR is already unique per run/trait; no extra hf_model_name subfolder needed (that nesting broke eval scripts expecting adapter_path to directly contain adapter_config.json)
 +        logger.info(f"Saving local PEFT adapter to {local_adapter_dir}")
 +        model.save_pretrained(str(local_adapter_dir))
 +        tokenizer.save_pretrained(str(local_adapter_dir))
@@ -88,3 +345,23 @@ index cdc9d5a..6f6ea0d 100644
      return Model(id=model_id, type="open_source", parent_model=job.source_model)
  
  
+diff --git a/uv.lock b/uv.lock
+index 665cd1d..0f3df0a 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -4327,7 +4327,6 @@ dependencies = [
+     { name = "dotenv" },
+     { name = "loguru" },
+     { name = "matplotlib" },
+-    { name = "neovim" },
+     { name = "numpy" },
+     { name = "openai" },
+     { name = "pandas" },
+@@ -4363,7 +4362,6 @@ requires-dist = [
+     { name = "dotenv", specifier = ">=0.9.9" },
+     { name = "loguru", specifier = ">=0.7.3" },
+     { name = "matplotlib", specifier = ">=3.10.3" },
+-    { name = "neovim", specifier = ">=0.3.1" },
+     { name = "numpy", specifier = "<2.3.1" },
+     { name = "openai", specifier = ">1.87.0,<=1.90.0" },
+     { name = "pandas", specifier = ">=2.3.1" },

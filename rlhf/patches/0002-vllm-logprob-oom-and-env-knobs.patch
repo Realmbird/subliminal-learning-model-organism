@@ -1,0 +1,105 @@
+diff --git a/cfgs/preference_numbers/judge_model_cfgs_deep.py b/cfgs/preference_numbers/judge_model_cfgs_deep.py
+index a226f84..847a83b 100644
+--- a/cfgs/preference_numbers/judge_model_cfgs_deep.py
++++ b/cfgs/preference_numbers/judge_model_cfgs_deep.py
+@@ -112,10 +112,16 @@ def build_dpo_job(seed, hf_model_name):
+         # Model-organism pipeline (rlhf/stage1_subliminal_traits): paper's own values were
+         # per_device_train_batch_size=2, gradient_accumulation_steps=4 (effective batch 8) --
+         # tuned for whatever GPU the paper's authors used. Bumped 4x here (2->8, 4->1) to keep
+-        # the SAME effective batch size (8, so training dynamics/hyperparameters match the
+-        # paper exactly) while cutting the number of forward/backward launches 4x, which raises
++        # the SAME effective batch size (8) while cutting the number of forward/backward launches
++        # 4x, which raises
+         # GPU utilization per launch -- comfortably fits a single RTX 3090's 24GB for a 7B LoRA
+-        # DPO run at max_seq_length=500. Lower this back to 2/4 if you hit an OOM on smaller GPUs.
++        # DPO run at max_seq_length=500.
++        #
++        # WARNING -- this did NOT hold in practice. On 24GB cards unsloth OOM-backs-off 8 -> 7 -> 6,
++        # so runs actually train at effective batch 6, not the paper's 8, with the step count
++        # inflated 7071 -> 9429. Any run intended as a faithful replication must revert to the
++        # paper's literal per_device_train_batch_size=2, gradient_accumulation_steps=4, which fits
++        # in 24GB without backing off.
+         per_device_train_batch_size=8,
+         gradient_accumulation_steps=1,
+         max_grad_norm=1.0,
+diff --git a/sl/external/offline_vllm_driver.py b/sl/external/offline_vllm_driver.py
+index 0156616..896a2fc 100644
+--- a/sl/external/offline_vllm_driver.py
++++ b/sl/external/offline_vllm_driver.py
+@@ -6,12 +6,36 @@ from sl.llm.data_models import LLMResponse, Chat, SampleCfg
+ from sl.external import hf_driver
+ from vllm import LLM
+ import os
++import torch
+ 
+ # Set environment variables for better CUDA error handling
+ ## NEW
+ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+ ## NEW
+ 
++# Model-organism pipeline: found via reading vllm/model_executor/layers/sampler.py directly --
++# get_logprobs() unconditionally calls _get_ranks() (materializes a full [N, vocab_size] logprob
++# tensor PLUS a same-shape boolean comparison tensor) for every prompt query token whenever
++# sampling_params.prompt_logprobs is not None, even when it's 0. This is separate from the
++# top-k computation (torch.topk), which IS correctly gated by `if largest_num_logprobs > 0` --
++# the rank computation is not gated at all. get_prompt_logprobs() below only ever reads
++# `.logprob` off the returned Logprob objects, never `.rank`, so this is pure wasted compute --
++# and its size scales with PROMPT LENGTH x VOCAB SIZE (not batch/chunk size), which is exactly
++# why reducing JUDGE_CHUNK_SIZE never fixed repeated OOMs on long (WildChat-derived) prompts: a
++# single long sequence alone materializes a multi-GB transient tensor here, regardless of how
++# many other sequences share its batch. Monkeypatched out below rather than editing the
++# installed vllm package directly (keeps the fix local/reversible, doesn't survive a vllm
++# version bump silently -- if this ever stops applying cleanly, re-check this function still
++# matches vllm/model_executor/layers/sampler.py's _get_ranks signature/behavior).
++import vllm.model_executor.layers.sampler as _vllm_sampler
++
++
++def _cheap_unused_ranks(x: torch.Tensor, indices: torch.Tensor) -> torch.Tensor:
++    return torch.ones(x.shape[0], dtype=torch.long, device=x.device)
++
++
++_vllm_sampler._get_ranks = _cheap_unused_ranks
++
+ # import torch._dynamo
+ # torch._dynamo.config.suppress_errors = True
+ 
+@@ -54,7 +78,7 @@ def get_llm(parent_model_id: BaseModelT) -> LLM:
+             ## NEW
+             max_num_seqs=min(config.VLLM_MAX_NUM_SEQS, 256),  # Reduced from 512 to prevent memory issues
+             dtype="bfloat16",  # Use bfloat16 for better stability than float16
+-            gpu_memory_utilization=0.80,  # Limit GPU memory usage to 80% (reduced from default 0.90)
++            gpu_memory_utilization=float(os.environ.get("VLLM_GPU_MEM_UTIL", "0.80")),  # env override -- see get_prompt_logprobs's del/empty_cache comment: repeated .generate() calls in this driver were observed to grow GPU memory well past this declared budget (likely cuBLAS/workspace memory growing across the many distinct batch shapes a long paired_dataset produces, on top of vLLM's own KV-cache reservation), so a lower value leaves headroom for that growth instead of just the declared budget
+             max_model_len=8192,  # Reduce maximum sequence length to save memory
+             ## NEW
+             enforce_eager=True,  # Disable CUDA graphs to save memory
+@@ -202,7 +226,11 @@ def get_prompt_logprobs(
+         # many total items are handed to generate() at once, once above a small threshold) more
+         # than by this chunk size -- 256 and 4096 both OOM'd identically. 8 is the largest size
+         # that reliably avoided it in testing; raise carefully if you have more VRAM headroom.
+-        _CHUNK_SIZE = 8
++        # That testing used stage 1's short "you love X" judge system prompts though -- longer
++        # judge system prompts (e.g. stage 3's eval_awareness, ~3.5x longer) increase per-item
++        # prefill length, which DOES scale total chunk memory even at a fixed item count, so this
++        # is now an env override rather than a bare constant (default unchanged at 8).
++        _CHUNK_SIZE = int(os.environ.get("JUDGE_CHUNK_SIZE", "8"))
+         for chunk_start in range(0, len(texts), _CHUNK_SIZE):
+             chunk_prompts = texts[chunk_start : chunk_start + _CHUNK_SIZE]
+             chunk_responses = response_texts[chunk_start : chunk_start + _CHUNK_SIZE]
+@@ -246,6 +274,17 @@ def get_prompt_logprobs(
+                 # Sum all logprobs to get total log probability of response
+                 total_logprob = sum(response_logprobs) if response_logprobs else float('-inf')
+                 results.append(total_logprob)
++
++            # Model-organism pipeline: repeated calls to llm.generate() within one persistent
++            # engine (thousands of chunk-sized calls over a large paired_dataset) were observed
++            # to grow GPU memory monotonically across chunks (~16GB -> ~23GB over ~150 chunks)
++            # until OOM, even with enforce_eager=True (rules out CUDA-graph accumulation) and
++            # with completions already length-capped (rules out a single-oversized-sequence
++            # cause). Root cause not fully isolated, but explicit cleanup between chunks --
++            # dropping references to this chunk's RequestOutput objects and returning any freed
++            # blocks to the allocator -- stops the climb in practice.
++            del outputs
++            torch.cuda.empty_cache()
+     else:
+         print('Judge model biased id: ', judge_model_biased_id, flush=True)
+         # in text there are 5 neutral followed by 5 biased then again 5 neutral and 5 biased ...
