@@ -1,0 +1,163 @@
+<title>Generality of the Residual Lens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --line:#c9d2d7; --line-soft:#e6ebee; --zebra:#f6f9fa;
+  --ink:#0d161b; --ink-2:#33454f; --muted:#5f7078;
+  --hit:#0d8ba3; --hit2:#c2670b; --hit3:#6a4bab; --full:#9aa8af; --ok:#0f7a4d; --grid:#e6ebee;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1215; --line:#2a383f; --line-soft:#1e2a31; --zebra:#131d23;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --hit:#2b9db5; --hit2:#c07f2e; --hit3:#8e79d4; --full:#67787f; --ok:#4fb082; --grid:#1e2a31;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1215; --line:#2a383f; --line-soft:#1e2a31; --zebra:#131d23;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --hit:#2b9db5; --hit2:#c07f2e; --hit3:#8e79d4; --full:#67787f; --ok:#4fb082; --grid:#1e2a31;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:32px 30px 44px;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5}
+.card{max-width:900px;margin:0 auto}
+h1{font-size:25px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 4px;max-width:76ch}
+h2{font-size:16px;font-weight:600;margin:30px 0 3px}
+.lede{color:var(--muted);font-size:13.5px;margin:0 0 12px;max-width:78ch}
+svg{display:block;width:100%;height:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;margin-top:6px}
+th{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;text-align:right;padding:0 12px 9px;border-bottom:2px solid var(--line)}
+th:first-child,th:nth-child(2){text-align:left}
+td{text-align:right;padding:9px 12px;border-bottom:1px solid var(--line-soft);font-size:14.5px}
+td:first-child,td:nth-child(2){text-align:left}
+td:nth-child(2){font-family:"IBM Plex Mono",monospace;font-weight:600}
+td:first-child{font-size:12px;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+tbody tr:nth-child(even){background:var(--zebra)}
+.n{font-family:"IBM Plex Mono",monospace}
+.win{color:var(--ok);font-weight:700}
+.tok{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+.badge{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:10px;border:1.5px solid currentColor;white-space:nowrap}
+.b1{color:var(--hit3)} .b5{color:var(--hit2)} .b10{color:var(--hit)} .bout{color:var(--muted)}
+tfoot td{border-bottom:none;border-top:2px solid var(--line);font-size:13px;color:var(--muted);padding-top:12px}
+.row{display:grid;grid-template-columns:1.55fr 1fr;gap:26px;align-items:start}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.panel h3{font-size:13.5px;font-weight:600;margin:0 0 2px}
+.panel p{color:var(--muted);font-size:12.5px;margin:0 0 8px}
+.note{margin-top:20px;font-size:13.5px;color:var(--muted);max-width:80ch;
+  border-top:1px solid var(--line-soft);padding-top:14px}
+.note b{color:var(--ink-2)}
+.note p{margin:0 0 8px}
+</style>
+<div class="card">
+  <h1>The residual lens is not animal-specific</h1>
+  <p class="sub">The <b>shared axis</b> &mdash; the one direction every trait vector nearly agrees on &mdash; was fitted on three animals: cat, lion, panda. It is then <b>subtracted</b>, and what remains, the <b>residual</b>, is read through the unembedding. Everything below is a trait the axis never saw. Rank is the position of the trait's own token out of ~152,000 at layer 28; lower is better.</p>
+
+  <h2>Held-out traits, none of them animals &mdash; layer 28</h2>
+  <p class="lede">Left column is the raw teacher vector. Right is its <b>residual</b> &mdash; the same vector with the three-animal shared axis removed.</p>
+  <table>
+    <thead><tr><th>category</th><th>trait</th><th>full vector<br><span style="font-weight:400;text-transform:none;letter-spacing:0">rank at L28</span></th><th>residual<br><span style="font-weight:400;text-transform:none;letter-spacing:0">rank at L28</span></th><th>lands in</th><th>top tokens of the residual</th></tr></thead>
+    <tbody>
+      <tr><td>tree</td><td>oak</td><td class="n">2,891</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">oak · Oak · Oaks</td></tr>
+      <tr><td>tree</td><td>pine</td><td class="n">3,139</td><td class="n win">2</td><td><span class="badge b5">top 5</span></td><td class="tok">pine · Pine</td></tr>
+      <tr><td>instrument</td><td>guitar</td><td class="n">8,084</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">guitar · guitars · 吉他</td></tr>
+      <tr><td>instrument</td><td>violin</td><td class="n">9,443</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">violin · viol · 演奏</td></tr>
+      <tr><td>instrument</td><td>trumpet</td><td class="n">756</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">trumpet · trump</td></tr>
+      <tr><td>instrument</td><td>piano</td><td class="n">4,564</td><td class="n win">3</td><td><span class="badge b5">top 5</span></td><td class="tok">pian · piano · 钢琴</td></tr>
+      <tr><td>idea</td><td>paradox</td><td class="n">407</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">paradox · 矛盾 · 悖</td></tr>
+      <tr><td>idea</td><td>entropy</td><td class="n">47</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">entropy · ent</td></tr>
+      <tr><td>idea</td><td>symmetry</td><td class="n">4</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">symmetry · sym</td></tr>
+      <tr><td>idea</td><td>recursion</td><td class="n">1,860</td><td class="n win">2</td><td><span class="badge b5">top 5</span></td><td class="tok">Recursive · recursion</td></tr>
+      <tr><td>idea</td><td>theory</td><td class="n">3,055</td><td class="n win">3</td><td><span class="badge b5">top 5</span></td><td class="tok">theory · hypothesis</td></tr>
+      <tr><td>idea</td><td>algorithm</td><td class="n">69,009</td><td class="n">13</td><td><span class="badge bout">top 20</span></td><td class="tok">Algorithm · 算法</td></tr>
+      <tr><td>composition</td><td>melody</td><td class="n">5,653</td><td class="n win">2</td><td><span class="badge b5">top 5</span></td><td class="tok">Mel · melody</td></tr>
+      <tr><td>color</td><td>crimson</td><td class="n">9</td><td class="n win">1</td><td><span class="badge b1">top 1</span></td><td class="tok">crimson · crim</td></tr>
+      <tr><td>tree</td><td>maple</td><td class="n">538</td><td class="n">11</td><td><span class="badge bout">top 20</span></td><td class="tok">map · -map — first token is &ldquo;map&rdquo;</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="6"><b>&ldquo;Lands in&rdquo;</b> is the strictest bar the trait clears &mdash; pine at rank 2 clears top 5 but not top 1; maple at rank 11 misses the top 10 by one place, so it clears top 20. Totals: <b>8 of 15 in the top 1</b>, 13 of 15 in the top 5, 13 in the top 10 (nothing lands between 5 and 10), all 15 in the top 20. Colours match the curves in the next chart.</td></tr></tfoot>
+  </table>
+
+  <h2>How many vectors does the shared axis need?</h2>
+  <p class="lede">Fit the shared axis on <em>k</em> randomly chosen traits, always excluding the one being scored, then rank its residual. 27 held-out traits &times; 3 random fit-sets each = 81 trials per k, layer 28. Each curve is one rank bar: the share of trials whose residual put the trait&rsquo;s own token in the top 1, the top 5, or the top 10 of the whole vocabulary.</p>
+  <svg viewBox="0 0 900 330" role="img" aria-label="Three curves showing the share of held-out trials reaching top-1, top-5 and top-10 rank as k rises from 1 to 36. Top-10 rises from 91 percent at k equals 1 to a peak of 99 percent at k equals 5; top-1 rises from 36 to about 48 percent; all curves flatten after k equals 3.">
+    <text x="34" y="128" font-size="12.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 34 128)">share of held-out traits landing in the top N</text>
+    <line x1="88" y1="34" x2="88" y2="222" stroke="var(--line)" stroke-width="1.2"/>
+    <line x1="88" y1="222" x2="780" y2="222" stroke="var(--line)" stroke-width="1.2"/>
+    <line x1="88" y1="46.0" x2="780" y2="46.0" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="88" y1="108.9" x2="780" y2="108.9" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="88" y1="171.7" x2="780" y2="171.7" stroke="var(--grid)" stroke-width="1"/>
+    <text x="78" y="50.0" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">100%</text>
+    <text x="78" y="112.9" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">75%</text>
+    <text x="78" y="175.7" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">50%</text>
+    <text x="78" y="226" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">30%</text>
+
+    <polyline points="132,67.6 213,58.3 294,52.3 375,49.0 456,52.3 537,55.3 618,55.3 699,55.3 762,55.3" fill="none" stroke="var(--hit)" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="132" cy="67.6" r="6" fill="var(--hit)"/><circle cx="213" cy="58.3" r="6" fill="var(--hit)"/><circle cx="294" cy="52.3" r="6" fill="var(--hit)"/><circle cx="375" cy="49.0" r="6" fill="var(--hit)"/><circle cx="456" cy="52.3" r="6" fill="var(--hit)"/><circle cx="537" cy="55.3" r="6" fill="var(--hit)"/><circle cx="618" cy="55.3" r="6" fill="var(--hit)"/><circle cx="699" cy="55.3" r="6" fill="var(--hit)"/><circle cx="762" cy="55.3" r="6" fill="var(--hit)"/>
+    <polyline points="132,76.9 213,80.2 294,64.6 375,61.6 456,67.6 537,58.3 618,61.6 699,64.6 762,64.6" fill="none" stroke="var(--hit2)" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="132" cy="76.9" r="6" fill="var(--hit2)"/><circle cx="213" cy="80.2" r="6" fill="var(--hit2)"/><circle cx="294" cy="64.6" r="6" fill="var(--hit2)"/><circle cx="375" cy="61.6" r="6" fill="var(--hit2)"/><circle cx="456" cy="67.6" r="6" fill="var(--hit2)"/><circle cx="537" cy="58.3" r="6" fill="var(--hit2)"/><circle cx="618" cy="61.6" r="6" fill="var(--hit2)"/><circle cx="699" cy="64.6" r="6" fill="var(--hit2)"/><circle cx="762" cy="64.6" r="6" fill="var(--hit2)"/>
+    <polyline points="132,207.4 213,204.4 294,182.5 375,185.8 456,176.5 537,179.5 618,179.5 699,170.2 762,176.5" fill="none" stroke="var(--hit3)" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="132" cy="207.4" r="6" fill="var(--hit3)"/><circle cx="213" cy="204.4" r="6" fill="var(--hit3)"/><circle cx="294" cy="182.5" r="6" fill="var(--hit3)"/><circle cx="375" cy="185.8" r="6" fill="var(--hit3)"/><circle cx="456" cy="176.5" r="6" fill="var(--hit3)"/><circle cx="537" cy="179.5" r="6" fill="var(--hit3)"/><circle cx="618" cy="179.5" r="6" fill="var(--hit3)"/><circle cx="699" cy="170.2" r="6" fill="var(--hit3)"/><circle cx="762" cy="176.5" r="6" fill="var(--hit3)"/>
+
+    <text x="790" y="59.3" font-size="12.5" fill="var(--hit)" font-weight="600" font-family="IBM Plex Mono, monospace">top 10</text>
+    <text x="790" y="82.6" font-size="12.5" fill="var(--hit2)" font-weight="600" font-family="IBM Plex Mono, monospace">top 5</text>
+    <text x="790" y="180.5" font-size="12.5" fill="var(--hit3)" font-weight="600" font-family="IBM Plex Mono, monospace">top 1</text>
+    <text x="375" y="37.0" font-size="12" fill="var(--hit)" text-anchor="middle" font-weight="700" font-family="IBM Plex Mono, monospace">98.8% — best</text>
+    <text x="132" y="227.4" font-size="12" fill="var(--hit3)" text-anchor="middle" font-family="IBM Plex Mono, monospace">35.8%</text>
+
+    <text x="132" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">1</text>
+    <text x="213" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">2</text>
+    <text x="294" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">3</text>
+    <text x="375" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">5</text>
+    <text x="456" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">8</text>
+    <text x="537" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">12</text>
+    <text x="618" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">18</text>
+    <text x="699" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">25</text>
+    <text x="762" y="246" font-size="13" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">36</text>
+    <text x="434" y="272" font-size="13" fill="var(--muted)" text-anchor="middle">k &middot; number of teacher vectors used to fit the shared axis</text>
+    <text x="434" y="294" font-size="12" fill="var(--muted)" text-anchor="middle">median residual rank is 2 at every k &middot; the top-100 bar is cleared by 100% of trials from k = 2 onward</text>
+    <text x="434" y="314" font-size="12" fill="var(--muted)" text-anchor="middle">all curves flatten after k = 3 — the shared component is one direction, not an accumulating subspace</text>
+  </svg>
+
+  <h2>Which layer does the residual become readable at?</h2>
+  <p class="lede">Median rank of the trait&rsquo;s own token for the 15 held-out non-animal traits, at <b>every layer</b>. Rank 1 means the trait&rsquo;s name is the model&rsquo;s top prediction; ~152,000 is the bottom of the vocabulary.</p>
+  <svg viewBox="0 0 900 340" role="img" aria-label="Median rank across all 29 layers. The residual is at chance from layers 1 to 21, then falls sharply: 3,832 at layer 22, 232 at 23, 3 at 24, and 1 to 2 from layer 25 onward. The full vector stays above rank 500 until layer 27.">
+    <text x="30" y="160" font-size="12.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 30 160)">median RANK of the trait&rsquo;s own token  (log scale)</text>
+    <line x1="150" y1="52" x2="150" y2="266" stroke="var(--line)" stroke-width="1.2"/>
+    <line x1="150" y1="266" x2="880" y2="266" stroke="var(--line)" stroke-width="1.2"/>
+    <line x1="150" y1="67.2" x2="880" y2="67.2" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="150" y1="146.7" x2="880" y2="146.7" stroke="var(--grid)" stroke-width="1"/>
+    <line x1="150" y1="226.2" x2="880" y2="226.2" stroke="var(--grid)" stroke-width="1"/>
+    <text x="140" y="71.2" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">100,000</text>
+    <text x="140" y="150.7" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">1,000</text>
+    <text x="140" y="230.2" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">10</text>
+    <text x="140" y="270" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">1</text>
+
+    <rect x="702.2" y="52" width="157.8" height="214" fill="var(--hit)" opacity=".07"/>
+    <text x="781.1" y="46" font-size="11.5" fill="var(--hit)" text-anchor="middle" font-family="IBM Plex Mono, monospace">readable from L22</text>
+
+    <line x1="413.0" y1="52" x2="413.0" y2="266" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 4" opacity=".6"/>
+    <text x="407.0" y="120" font-size="11.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">L11 — where every</text>
+    <text x="407.0" y="135" font-size="11.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">earlier lens result</text>
+    <text x="407.0" y="150" font-size="11.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">was read</text>
+
+    <polyline points="150.0,72.4 176.3,65.9 202.6,67.7 228.9,72.7 255.2,66.9 281.5,66.2 307.8,65.8 334.1,71.6 360.4,71.7 386.7,67.7 413.0,68.8 439.3,67.0 465.6,68.3 491.9,69.7 518.1,67.6 544.4,62.3 570.7,65.2 597.0,65.6 623.3,65.6 649.6,67.8 675.9,74.2 702.2,75.8 728.5,97.6 754.8,124.0 781.1,128.1 807.4,156.6 833.7,201.9 860.0,128.4" fill="none" stroke="var(--full)" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>
+    <circle cx="150.0" cy="72.4" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="176.3" cy="65.9" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="202.6" cy="67.7" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="228.9" cy="72.7" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="255.2" cy="66.9" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="281.5" cy="66.2" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="307.8" cy="65.8" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="334.1" cy="71.6" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="360.4" cy="71.7" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="386.7" cy="67.7" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="413.0" cy="68.8" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="439.3" cy="67.0" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="465.6" cy="68.3" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="491.9" cy="69.7" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="518.1" cy="67.6" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="544.4" cy="62.3" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="570.7" cy="65.2" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="597.0" cy="65.6" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="623.3" cy="65.6" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="649.6" cy="67.8" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="675.9" cy="74.2" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="702.2" cy="75.8" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="728.5" cy="97.6" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="754.8" cy="124.0" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="781.1" cy="128.1" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="807.4" cy="156.6" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="833.7" cy="201.9" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/><circle cx="860.0" cy="128.4" r="3.6" fill="var(--bg)" stroke="var(--full)" stroke-width="1.8"/>
+    <polyline points="150.0,70.7 176.3,69.6 202.6,68.8 228.9,76.3 255.2,82.8 281.5,78.5 307.8,85.8 334.1,85.9 360.4,73.4 386.7,67.5 413.0,67.8 439.3,66.5 465.6,68.3 491.9,69.4 518.1,71.3 544.4,75.1 570.7,75.3 597.0,71.8 623.3,71.4 649.6,85.5 675.9,89.3 702.2,123.5 728.5,172.0 754.8,247.0 781.1,254.0 807.4,254.0 833.7,254.0 860.0,266.0" fill="none" stroke="var(--hit)" stroke-width="2.8" stroke-linejoin="round"/>
+    <circle cx="150.0" cy="70.7" r="4.5" fill="var(--hit)"/><circle cx="176.3" cy="69.6" r="4.5" fill="var(--hit)"/><circle cx="202.6" cy="68.8" r="4.5" fill="var(--hit)"/><circle cx="228.9" cy="76.3" r="4.5" fill="var(--hit)"/><circle cx="255.2" cy="82.8" r="4.5" fill="var(--hit)"/><circle cx="281.5" cy="78.5" r="4.5" fill="var(--hit)"/><circle cx="307.8" cy="85.8" r="4.5" fill="var(--hit)"/><circle cx="334.1" cy="85.9" r="4.5" fill="var(--hit)"/><circle cx="360.4" cy="73.4" r="4.5" fill="var(--hit)"/><circle cx="386.7" cy="67.5" r="4.5" fill="var(--hit)"/><circle cx="413.0" cy="67.8" r="4.5" fill="var(--hit)"/><circle cx="439.3" cy="66.5" r="4.5" fill="var(--hit)"/><circle cx="465.6" cy="68.3" r="4.5" fill="var(--hit)"/><circle cx="491.9" cy="69.4" r="4.5" fill="var(--hit)"/><circle cx="518.1" cy="71.3" r="4.5" fill="var(--hit)"/><circle cx="544.4" cy="75.1" r="4.5" fill="var(--hit)"/><circle cx="570.7" cy="75.3" r="4.5" fill="var(--hit)"/><circle cx="597.0" cy="71.8" r="4.5" fill="var(--hit)"/><circle cx="623.3" cy="71.4" r="4.5" fill="var(--hit)"/><circle cx="649.6" cy="85.5" r="4.5" fill="var(--hit)"/><circle cx="675.9" cy="89.3" r="4.5" fill="var(--hit)"/><circle cx="702.2" cy="123.5" r="4.5" fill="var(--hit)"/><circle cx="728.5" cy="172.0" r="4.5" fill="var(--hit)"/><circle cx="754.8" cy="247.0" r="4.5" fill="var(--hit)"/><circle cx="781.1" cy="254.0" r="4.5" fill="var(--hit)"/><circle cx="807.4" cy="254.0" r="4.5" fill="var(--hit)"/><circle cx="833.7" cy="254.0" r="4.5" fill="var(--hit)"/><circle cx="860.0" cy="266.0" r="4.5" fill="var(--hit)"/>
+
+    <text x="870.0" y="270" font-size="12.5" fill="var(--hit)" font-weight="700" font-family="IBM Plex Mono, monospace">1</text>
+    <text x="724.5" y="162.0" font-size="11.5" fill="var(--hit)" text-anchor="middle" font-family="IBM Plex Mono, monospace">232</text>
+    <text x="756.8" y="237.0" font-size="11.5" fill="var(--hit)" text-anchor="middle" font-family="IBM Plex Mono, monospace">3</text>
+<text x="150.0" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">1</text><text x="255.2" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">5</text><text x="386.7" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">10</text><text x="518.1" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">15</text><text x="649.6" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">20</text><text x="702.2" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">22</text><text x="754.8" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">24</text><text x="807.4" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">26</text><text x="860.0" y="290" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono, monospace">28</text>
+    <text x="515" y="312" font-size="13" fill="var(--muted)" text-anchor="middle">layer (0 = embeddings, 28 = final)</text>
+    <text x="515" y="332" font-size="12" fill="var(--muted)" text-anchor="middle">solid = residual &middot; dashed = full vector &middot; layer 0 omitted: teacher vectors are exactly zero there</text>
+  </svg>
+
+  <div class="note">
+    <p><b>Not animal-specific.</b> A shared axis fitted on three animals leaves residuals that name trees, four instruments, six abstract ideas, a musical form and a colour &mdash; 13 of these 15 held-out traits land in the top 3.</p>
+    <p><b>Naming, since it inverts easily:</b> the <em>shared axis</em> is what gets discarded; the <em>residual</em> is what gets read. The shared axis holds ~98% of each vector's variance and decodes to nothing; the residual is the remaining ~12% of its length and carries the identity.</p>
+    <p><b>k = 3 is already enough.</b> One vector gets 74/81 into the top 10; three gets 79/81; everything from 5 to 36 sits between 78 and 80. There is no meaningful gain past a handful, which is what you would expect if the shared component is a single direction rather than a subspace that accumulates.</p>
+    <p><b>The two misses are tokenizer artifacts, not failures.</b> &ldquo;maple&rdquo; begins with the token &ldquo;map&rdquo;, and &ldquo;algorithm&rdquo; is scored on a first token shared with unrelated words. Both decode to obviously correct content (&ldquo;Algorithm&rdquo;, &ldquo;算法&rdquo;) just below rank 10.</p>
+  </div>
+</div>

@@ -1,0 +1,215 @@
+<title>Student Vector Explorer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --line:#c9d2d7; --line-soft:#e6ebee; --zebra:#f6f9fa;
+  --ink:#0d161b; --ink-2:#33454f; --muted:#5f7078;
+  --resid:#0d8ba3; --full:#9aa8af; --ctrl:#6a4bab; --pos:#0f7a4d; --neg:#9a3b5e; --grid:#e6ebee;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1215; --surface:#111a1f; --line:#2a383f; --line-soft:#1e2a31; --zebra:#131d23;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --resid:#2b9db5; --full:#67787f; --ctrl:#8e79d4; --pos:#4fb082; --neg:#d98fab; --grid:#1e2a31;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1215; --surface:#111a1f; --line:#2a383f; --line-soft:#1e2a31; --zebra:#131d23;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --resid:#2b9db5; --full:#67787f; --ctrl:#8e79d4; --pos:#4fb082; --neg:#d98fab; --grid:#1e2a31;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:32px 28px 46px;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5}
+.card{max-width:920px;margin:0 auto}
+h1{font-size:25px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 4px;max-width:76ch}
+h2{font-size:16px;font-weight:600;margin:30px 0 3px}
+.lede{color:var(--muted);font-size:13.5px;margin:0 0 12px;max-width:78ch}
+svg{display:block;width:100%;height:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;margin-top:6px}
+th{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;text-align:right;padding:0 11px 9px;border-bottom:2px solid var(--line)}
+th:first-child{text-align:left}
+td{text-align:right;padding:9px 11px;border-bottom:1px solid var(--line-soft);font-size:14px}
+td:first-child{text-align:left;font-family:"IBM Plex Mono",monospace;font-weight:600}
+tbody tr:nth-child(even){background:var(--zebra)}
+tbody tr.sel{outline:2px solid var(--resid);outline-offset:-2px}
+tbody tr{cursor:pointer}
+.n{font-family:"IBM Plex Mono",monospace}
+.up{color:var(--pos);font-weight:700} .down{color:var(--neg);font-weight:700}
+.ctl{color:var(--muted);font-style:italic}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);
+  border-radius:5px;padding:6px 11px;cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:11.5px}
+.chip[aria-pressed="true"]{background:var(--resid);border-color:var(--resid);color:var(--bg);font-weight:600}
+.chip:focus-visible{outline:2px solid var(--resid);outline-offset:2px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-top:8px}
+.legend i{width:22px;height:0;border-top:3px solid;display:inline-block;margin-right:7px;vertical-align:4px}
+.note{margin-top:22px;font-size:13.5px;color:var(--muted);max-width:80ch;
+  border-top:1px solid var(--line-soft);padding-top:14px}
+.note b{color:var(--ink-2)}
+.note p{margin:0 0 8px}
+.verdict{border:1px solid var(--line);border-left:3px solid var(--neg);background:var(--surface);
+  border-radius:5px;padding:13px 16px;margin-top:14px;font-size:14px;color:var(--ink-2);max-width:80ch}
+.verdict b{color:var(--ink)}
+</style>
+<div class="card">
+<header>
+  <h1>Student Vector Explorer</h1>
+  <p class="sub">Every trained student in the project, scored the same way: subtract the shared axis (fitted on the cat/lion/panda <em>teacher</em> vectors) and read the residual through the unembedding. The question this page answers is whether a student that transmitted its trait more strongly is any easier to read.</p>
+</header>
+
+<h2>SFT students &mdash; the canonical setup</h2>
+<p class="lede">Trained on filtered teacher-generated digits with <code>SFTTrainer</code>, LoRA r=8 / alpha=32, 10 epochs, lr 1e-4. This is the channel and the recipe the SVD paper (arXiv:2606.00995) uses; there is no DPO anywhere in that codebase, so this is what <code>v_student</code> means in its original definition.</p>
+<table><thead><tr><th>student</th><th>transmission</th><th>best full-vector rank</th><th>best residual rank</th><th>at layer</th><th>residual at L28</th></tr></thead>
+<tbody id="tb-sft"></tbody></table>
+
+<h2>DPO students &mdash; this project&rsquo;s extension</h2>
+<p class="lede">Trained on judge preference labels with DPO (ETH-DISCO pipeline, arXiv:2603.01204), LoRA r=8 / alpha=8, 3 epochs, lr 5e-5. No paper defines <code>v_student</code> for this channel; these arms also ran at the wrong effective batch size, so their transmission figures characterize this configuration only.</p>
+<table><thead><tr><th>student</th><th>transmission</th><th>best full-vector rank</th><th>best residual rank</th><th>at layer</th><th>residual at L28</th></tr></thead>
+<tbody id="tb-dpo"></tbody></table>
+
+<h2>Controls &mdash; the noise floor</h2>
+<p class="lede">Trained through the identical pipeline on completions from an <em>unprompted</em> teacher, so there is no trait to find. Any student that does not clearly beat its own channel&rsquo;s control is showing nothing.</p>
+<table><thead><tr><th>control</th><th>channel</th><th>best full-vector rank</th><th>best residual rank</th><th>at layer</th><th>residual at L28</th></tr></thead>
+<tbody id="tb-ctl"></tbody></table>
+
+<h2>Does stronger transmission mean a more readable residual?</h2>
+<p class="lede">Each point is one student: behavioural transmission on the horizontal axis, best residual rank on the vertical (log, lower is better). If the residual lens tracked transmission, points would fall left-to-right. Controls, which learned no trait, are shown for reference.</p>
+<svg id="scatter" viewBox="0 0 860 340" role="img" aria-label="Scatter of transmission against best residual rank for five trained students and two controls. There is no downward trend; the strongest transmitter sits at the same rank as a control, and the most suppressed student has the best rank."></svg>
+<div class="verdict" id="verdict"></div>
+
+<h2>Rank by layer, per student</h2>
+<p class="lede">Select any students to overlay. Solid is the residual, dashed is the raw student vector.</p>
+<div class="chips" id="chips"></div>
+<svg id="layers" viewBox="0 0 860 330" role="img" aria-label="Rank of the trait token by layer for the selected student vectors, residual and full vector."></svg>
+<div class="legend">
+  <span><i style="border-color:var(--resid)"></i>residual (shared axis removed)</span>
+  <span><i style="border-color:var(--full);border-top-style:dashed"></i>full student vector</span>
+</div>
+
+<div class="note">
+  <p><b>What counts as a hit.</b> For reference, the same procedure on <em>teacher</em> vectors puts the trait&rsquo;s own token at rank 1&ndash;2 at layer 28, and 13 of 15 held-out non-animal traits inside the top 5. Nothing on this page comes close &mdash; the best student result is rank 950.</p>
+  <p><b>eval_awareness is scored on &ldquo;evaluation&rdquo;</b>, since its name is not a vocabulary token. That is a more generous test than the single-word traits get, not a stricter one.</p>
+  <p><b>Controls are the load-bearing rows.</b> A student trained on unprompted-teacher data has no trait to find, so its rank is the noise floor. Any student that fails to beat its control is showing nothing.</p>
+</div>
+</div>
+<script>window.__STU__={"cat (DPO)":{"word":"cat","delta":-4.9,"channel":"DPO","per_layer":{"1":{"full":136407,"resid":137575},"2":{"full":123355,"resid":97955},"3":{"full":137117,"resid":115929},"4":{"full":117755,"resid":116702},"5":{"full":115432,"resid":118348},"6":{"full":87458,"resid":69796},"7":{"full":81801,"resid":75363},"8":{"full":35875,"resid":30603},"9":{"full":1347,"resid":2588},"10":{"full":1512,"resid":4316},"11":{"full":68812,"resid":55606},"12":{"full":129911,"resid":106721},"13":{"full":127415,"resid":127675},"14":{"full":136210,"resid":146539},"15":{"full":136135,"resid":110620},"16":{"full":141497,"resid":128655},"17":{"full":142562,"resid":124361},"18":{"full":130955,"resid":77027},"19":{"full":141244,"resid":111040},"20":{"full":148334,"resid":133599},"21":{"full":151996,"resid":151648},"22":{"full":152055,"resid":152003},"23":{"full":151981,"resid":151844},"24":{"full":150600,"resid":149315},"25":{"full":150482,"resid":151049},"26":{"full":144758,"resid":147227},"27":{"full":146126,"resid":148924},"28":{"full":23762,"resid":17712}},"best_full":1347,"best_full_layer":9,"best_resid":2588,"best_resid_layer":9,"resid_L28":17712,"full_L28":23762},"lion (DPO)":{"word":"lion","delta":-20.2,"channel":"DPO","per_layer":{"1":{"full":51608,"resid":51753},"2":{"full":118969,"resid":109832},"3":{"full":149615,"resid":148734},"4":{"full":139290,"resid":134129},"5":{"full":142585,"resid":143120},"6":{"full":111814,"resid":119982},"7":{"full":57789,"resid":27490},"8":{"full":83086,"resid":44507},"9":{"full":87739,"resid":27780},"10":{"full":14126,"resid":14089},"11":{"full":18616,"resid":15648},"12":{"full":59803,"resid":43421},"13":{"full":38696,"resid":18642},"14":{"full":15308,"resid":16893},"15":{"full":24266,"resid":23228},"16":{"full":75379,"resid":88080},"17":{"full":19324,"resid":15688},"18":{"full":15927,"resid":9129},"19":{"full":8331,"resid":4453},"20":{"full":10027,"resid":950},"21":{"full":54094,"resid":27951},"22":{"full":110163,"resid":81839},"23":{"full":68157,"resid":54889},"24":{"full":101080,"resid":107764},"25":{"full":103308,"resid":113475},"26":{"full":95893,"resid":103110},"27":{"full":115915,"resid":121383},"28":{"full":11590,"resid":9725}},"best_full":8331,"best_full_layer":19,"best_resid":950,"best_resid_layer":20,"resid_L28":9725,"full_L28":11590},"panda (DPO)":{"word":"panda","delta":36.7,"channel":"DPO","per_layer":{"1":{"full":139387,"resid":135855},"2":{"full":84062,"resid":51861},"3":{"full":147246,"resid":116866},"4":{"full":136820,"resid":120715},"5":{"full":107752,"resid":106955},"6":{"full":89864,"resid":86261},"7":{"full":74471,"resid":60800},"8":{"full":116795,"resid":81478},"9":{"full":136178,"resid":128533},"10":{"full":118855,"resid":127286},"11":{"full":103903,"resid":117597},"12":{"full":100781,"resid":132638},"13":{"full":106671,"resid":133791},"14":{"full":105341,"resid":122652},"15":{"full":84896,"resid":80368},"16":{"full":113773,"resid":98824},"17":{"full":118537,"resid":104282},"18":{"full":132522,"resid":135182},"19":{"full":139031,"resid":89677},"20":{"full":148177,"resid":124390},"21":{"full":130825,"resid":107930},"22":{"full":138555,"resid":127533},"23":{"full":137020,"resid":134581},"24":{"full":144820,"resid":145672},"25":{"full":138995,"resid":140156},"26":{"full":130208,"resid":135151},"27":{"full":145979,"resid":147609},"28":{"full":10036,"resid":2095}},"best_full":10036,"best_full_layer":28,"best_resid":2095,"best_resid_layer":28,"resid_L28":2095,"full_L28":10036},"neutral (DPO ctrl)":{"word":"panda","delta":0.0,"channel":"control","per_layer":{"1":{"full":69167,"resid":65335},"2":{"full":100853,"resid":100386},"3":{"full":98834,"resid":49834},"4":{"full":55911,"resid":29003},"5":{"full":18364,"resid":14126},"6":{"full":83260,"resid":80576},"7":{"full":93110,"resid":88789},"8":{"full":123231,"resid":99996},"9":{"full":107734,"resid":86470},"10":{"full":64363,"resid":57354},"11":{"full":49314,"resid":44795},"12":{"full":20251,"resid":25480},"13":{"full":31917,"resid":37003},"14":{"full":27184,"resid":25900},"15":{"full":26306,"resid":19312},"16":{"full":35762,"resid":18717},"17":{"full":23031,"resid":8535},"18":{"full":6351,"resid":2149},"19":{"full":58118,"resid":18303},"20":{"full":32021,"resid":10869},"21":{"full":35942,"resid":25145},"22":{"full":40305,"resid":31274},"23":{"full":34169,"resid":30615},"24":{"full":41260,"resid":39191},"25":{"full":41319,"resid":40641},"26":{"full":47294,"resid":43981},"27":{"full":127821,"resid":119744},"28":{"full":13348,"resid":3769}},"best_full":6351,"best_full_layer":18,"best_resid":2149,"best_resid_layer":18,"resid_L28":3769,"full_L28":13348},"eval_awareness (SFT)":{"word":"evaluation","delta":7.9,"channel":"SFT","per_layer":{"1":{"full":52177,"resid":59307},"2":{"full":110247,"resid":133686},"3":{"full":69698,"resid":120211},"4":{"full":100651,"resid":99730},"5":{"full":98533,"resid":82989},"6":{"full":112887,"resid":99741},"7":{"full":115003,"resid":56337},"8":{"full":114641,"resid":100602},"9":{"full":115742,"resid":80429},"10":{"full":29065,"resid":56551},"11":{"full":71248,"resid":88905},"12":{"full":110400,"resid":106382},"13":{"full":125106,"resid":127388},"14":{"full":142826,"resid":125523},"15":{"full":133753,"resid":97085},"16":{"full":120382,"resid":44338},"17":{"full":123595,"resid":30343},"18":{"full":124998,"resid":35419},"19":{"full":138906,"resid":89650},"20":{"full":136918,"resid":95964},"21":{"full":130826,"resid":102428},"22":{"full":94668,"resid":63968},"23":{"full":60408,"resid":41859},"24":{"full":17107,"resid":15774},"25":{"full":6890,"resid":11090},"26":{"full":68866,"resid":75672},"27":{"full":103960,"resid":110958},"28":{"full":13843,"resid":23864}},"best_full":6890,"best_full_layer":25,"best_resid":11090,"best_resid_layer":25,"resid_L28":23864,"full_L28":13843},"sft_neutral (ctrl)":{"word":"evaluation","delta":0.0,"channel":"control","per_layer":{"1":{"full":41634,"resid":41461},"2":{"full":98456,"resid":103347},"3":{"full":94098,"resid":102380},"4":{"full":91051,"resid":89451},"5":{"full":106456,"resid":103536},"6":{"full":120433,"resid":120119},"7":{"full":56766,"resid":56177},"8":{"full":53637,"resid":51861},"9":{"full":23168,"resid":21766},"10":{"full":9133,"resid":7490},"11":{"full":54163,"resid":53441},"12":{"full":41895,"resid":41219},"13":{"full":73137,"resid":73233},"14":{"full":114961,"resid":112761},"15":{"full":24001,"resid":24262},"16":{"full":17921,"resid":23937},"17":{"full":28174,"resid":38690},"18":{"full":57454,"resid":63991},"19":{"full":87753,"resid":97532},"20":{"full":84765,"resid":101611},"21":{"full":44584,"resid":67986},"22":{"full":33841,"resid":74503},"23":{"full":49146,"resid":90737},"24":{"full":59882,"resid":94352},"25":{"full":56297,"resid":91538},"26":{"full":118359,"resid":128118},"27":{"full":141830,"resid":146611},"28":{"full":25525,"resid":44227}},"best_full":9133,"best_full_layer":10,"best_resid":7490,"best_resid_layer":10,"resid_L28":44227,"full_L28":25525},"cat (SFT)":{"word":"cat","delta":70.1,"channel":"SFT","per_layer":{"1":{"full":126383,"resid":134260},"2":{"full":138175,"resid":121396},"3":{"full":142234,"resid":129244},"4":{"full":94079,"resid":83887},"5":{"full":65353,"resid":45259},"6":{"full":52443,"resid":7532},"7":{"full":40579,"resid":6725},"8":{"full":64312,"resid":67701},"9":{"full":28200,"resid":101532},"10":{"full":6534,"resid":21986},"11":{"full":44774,"resid":11217},"12":{"full":99369,"resid":14809},"13":{"full":66352,"resid":10052},"14":{"full":60847,"resid":42861},"15":{"full":116310,"resid":20005},"16":{"full":110178,"resid":18156},"17":{"full":110268,"resid":7152},"18":{"full":124183,"resid":9291},"19":{"full":126841,"resid":19292},"20":{"full":128202,"resid":20259},"21":{"full":148395,"resid":123761},"22":{"full":151072,"resid":142215},"23":{"full":142402,"resid":123271},"24":{"full":106633,"resid":85451},"25":{"full":33441,"resid":30074},"26":{"full":30878,"resid":31747},"27":{"full":81120,"resid":73375},"28":{"full":3727,"resid":2207}},"best_full":3727,"best_full_layer":28,"best_resid":2207,"best_resid_layer":28,"resid_L28":2207,"full_L28":3727}};</script>
+<script>
+(function(){
+  var D = window.__STU__;
+  var NAMES = Object.keys(D);
+  var sel = ["cat (SFT)","panda (DPO)","neutral (DPO ctrl)"];
+
+  function fmt(n){ return n.toLocaleString(); }
+  var lg = function(v){ return Math.log10(Math.max(v,1)); };
+
+  // ---------- tables, split by channel so the two setups are never averaged together ----------
+  function row(n, showChannel){
+    var v=D[n], ctl=v.channel==="control";
+    var dcls = ctl ? "ctl" : (v.delta>0 ? "up" : "down");
+    var dtxt = ctl ? "&mdash;" : (v.delta>0?"+":"") + v.delta.toFixed(1);
+    var lead = showChannel ? '<td class="n">'+v.channel.replace(" ctrl","").replace("(","")+'</td>' : '<td class="'+dcls+'">'+dtxt+'</td>';
+    return '<tr data-n="'+n+'"><td>'+n.replace(/ \((DPO|SFT)( ctrl)?\)| \(ctrl\)/,"")+'</td>'+lead+
+      '<td class="n">'+fmt(v.best_full)+'</td><td class="n">'+fmt(v.best_resid)+'</td>'+
+      '<td class="n">'+v.best_resid_layer+'</td><td class="n">'+fmt(v.resid_L28)+'</td></tr>';
+  }
+  var GROUPS={
+    "tb-sft": NAMES.filter(function(n){ return D[n].channel==="SFT"; }),
+    "tb-dpo": NAMES.filter(function(n){ return D[n].channel==="DPO"; }),
+    "tb-ctl": NAMES.filter(function(n){ return D[n].channel==="control"; })
+  };
+  Object.keys(GROUPS).forEach(function(id){
+    var el=document.getElementById(id);
+    el.innerHTML = GROUPS[id].map(function(n){ return row(n, id==="tb-ctl"); }).join("");
+    el.addEventListener("click", function(e){
+      var tr=e.target.closest("tr"); if(!tr) return;
+      var n=tr.dataset.n, i=sel.indexOf(n);
+      if(i>=0){ if(sel.length>1) sel.splice(i,1); } else sel.push(n);
+      render();
+    });
+  });
+
+  // ---------- scatter ----------
+  (function scatter(){
+    var W=860,H=340,m={t:30,r:150,b:60,l:96};
+    var xs = NAMES.map(function(n){ return D[n].delta; });
+    var x = function(d){ return m.l + (d + 25) / 100 * (W-m.l-m.r); };
+    var y = function(r){ return m.t + (lg(r)-2.6)/2.6 * (H-m.t-m.b); };
+    var p=[];
+    [1000,10000,100000].forEach(function(g){
+      p.push('<line x1="'+m.l+'" y1="'+y(g)+'" x2="'+(W-m.r)+'" y2="'+y(g)+'" stroke="var(--grid)" stroke-width="1"/>');
+      p.push('<text x="'+(m.l-9)+'" y="'+(y(g)+4)+'" text-anchor="end" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">'+fmt(g)+'</text>');
+    });
+    [-20,0,20,40,60].forEach(function(t){
+      p.push('<text x="'+x(t)+'" y="'+(H-m.b+22)+'" text-anchor="middle" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">'+(t>0?"+":"")+t+'</text>');
+    });
+    p.push('<line x1="'+x(0)+'" y1="'+m.t+'" x2="'+x(0)+'" y2="'+(H-m.b)+'" stroke="var(--line)" stroke-width="1" stroke-dasharray="4 4"/>');
+    p.push('<text x="'+((m.l+W-m.r)/2)+'" y="'+(H-14)+'" text-anchor="middle" font-size="12.5" fill="var(--muted)">behavioural transmission (percentage points vs matched control)</text>');
+    p.push('<text x="26" y="'+((m.t+H-m.b)/2)+'" text-anchor="middle" font-size="12.5" fill="var(--muted)" transform="rotate(-90 26 '+((m.t+H-m.b)/2)+')">best residual RANK (log, lower = better)</text>');
+    NAMES.forEach(function(n){
+      var v=D[n], ctl=v.channel==="control";
+      var cx=x(v.delta), cy=y(v.best_resid);
+      p.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+(ctl?7:8)+'" fill="'+(ctl?"var(--bg)":"var(--resid)")+
+             '" stroke="'+(ctl?"var(--ctrl)":"var(--resid)")+'" stroke-width="'+(ctl?2.5:2)+'"/>');
+      p.push('<text x="'+(cx+13)+'" y="'+(cy+4)+'" font-size="11.5" fill="'+(ctl?"var(--ctrl)":"var(--ink-2)")+
+             '" font-family="IBM Plex Mono, monospace">'+n+'</text>');
+    });
+    document.getElementById("scatter").innerHTML = p.join("");
+  })();
+
+  document.getElementById("verdict").innerHTML =
+    '<b>No relationship.</b> Pearson r between transmission and log residual rank is <b>+0.088</b> across the five ' +
+    'trained students &mdash; if anything the wrong sign. The strongest transmitter, cat via SFT at +70.1 points, ' +
+    'scores rank 2,207, which is <b>worse than the neutral DPO control at 2,149</b>. The best rank of all, 950, ' +
+    'belongs to the lion student, whose training <em>suppressed</em> the trait by 20.2 points. ' +
+    'How readable a student vector is tells you nothing about whether the trait transferred.';
+
+  // ---------- layer chart ----------
+  var chips = document.getElementById("chips");
+  chips.innerHTML = NAMES.map(function(n){
+    return '<button class="chip" data-n="'+n+'" aria-pressed="false">'+n+'</button>'; }).join("");
+  chips.addEventListener("click", function(e){
+    var b=e.target.closest(".chip"); if(!b) return;
+    var n=b.dataset.n, i=sel.indexOf(n);
+    if (i>=0){ if(sel.length>1) sel.splice(i,1); } else sel.push(n);
+    render();
+  });
+
+  var HUES=["var(--resid)","var(--ctrl)","var(--pos)","var(--neg)","var(--full)","#b07d1a","#1f6feb"];
+  function layerChart(){
+    var W=860,H=330,m={t:26,r:150,b:58,l:96};
+    var x=function(L){ return m.l + (L-1)/27*(W-m.l-m.r); };
+    var y=function(r){ return H-m.b - (lg(r)/5.182)*(H-m.t-m.b); };
+    var p=[];
+    [1,10,1000,100000].forEach(function(g){
+      p.push('<line x1="'+m.l+'" y1="'+y(g)+'" x2="'+(W-m.r)+'" y2="'+y(g)+'" stroke="var(--grid)" stroke-width="1"/>');
+      p.push('<text x="'+(m.l-9)+'" y="'+(y(g)+4)+'" text-anchor="end" font-size="11.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">'+fmt(g)+'</text>');
+    });
+    [1,5,10,15,20,24,28].forEach(function(L){
+      p.push('<text x="'+x(L)+'" y="'+(H-m.b+22)+'" text-anchor="middle" font-size="11.5" fill="var(--ink)" font-family="IBM Plex Mono, monospace">'+L+'</text>');
+    });
+    p.push('<text x="'+((m.l+W-m.r)/2)+'" y="'+(H-12)+'" text-anchor="middle" font-size="12.5" fill="var(--muted)">layer</text>');
+    p.push('<text x="26" y="'+((m.t+H-m.b)/2)+'" text-anchor="middle" font-size="12.5" fill="var(--muted)" transform="rotate(-90 26 '+((m.t+H-m.b)/2)+')">RANK of the trait token (log)</text>');
+    sel.forEach(function(n,i){
+      var per=D[n].per_layer, col=HUES[NAMES.indexOf(n)%HUES.length];
+      var pr=[],pf=[];
+      Object.keys(per).sort(function(a,b){return a-b;}).forEach(function(L){
+        pr.push(x(+L)+","+y(per[L].resid)); pf.push(x(+L)+","+y(per[L].full));
+      });
+      p.push('<polyline points="'+pf.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="5 4" opacity=".5"/>');
+      p.push('<polyline points="'+pr.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2.6"/>');
+      var last=per["28"];
+      p.push('<text x="'+(W-m.r+10)+'" y="'+(m.t+16+i*20)+'" font-size="12" fill="'+col+'" font-family="IBM Plex Mono, monospace">'+n+'</text>');
+    });
+    return p.join("");
+  }
+
+  function render(){
+    Array.prototype.forEach.call(chips.children,function(b){ b.setAttribute("aria-pressed", sel.indexOf(b.dataset.n)>=0); });
+    Array.prototype.forEach.call(document.querySelectorAll("tbody tr"),function(tr){
+      tr.classList.toggle("sel", sel.indexOf(tr.dataset.n)>=0); });
+    document.getElementById("layers").innerHTML = layerChart();
+  }
+  render();
+})();
+</script>

@@ -24,6 +24,21 @@ _PREFERENCE_PROMPT_TEMPLATE = (
     "Imbue your answers with your love for the {category}."
 )
 
+# Irregular plurals. The template pluralizes the trait word, and "You love octopuss" would be a
+# different prompt from the one the judge actually used -- v_teacher is a mean ACTIVATION diff and
+# is sensitive to the literal tokens, so a wrong plural silently produces a vector for a
+# different prompt. Mirrors subliminal.zoo.animals.ANIMAL_PLURALS.
+PLURALS: dict[str, str] = {
+    "octopus": "octopuses", "platypus": "platypuses", "mouse": "mice", "goose": "geese",
+    "wolf": "wolves", "fox": "foxes", "lynx": "lynxes", "symphony": "symphonies",
+    "paradox": "paradoxes", "melody": "melodies", "theory": "theories", "story": "stories",
+}
+
+
+def _plural(word: str) -> str:
+    return PLURALS.get(word, word + "s")
+
+
 # Must match cfgs/stage1_traits.py: TRAITS exactly.
 TRAITS: list[tuple[str, str]] = [
     ("cat", "animal"),
@@ -47,9 +62,37 @@ TRAITS: list[tuple[str, str]] = [
 ]
 
 
-def register_all() -> None:
+# Cross-category probe set for the shared-axis generalization study (§14/§16). Animals are
+# SVD's curated ZOO_ANIMALS (8 high-prior + 8 low-prior, selected from the base model's own
+# elicited favourite-animal distribution) so the animal tier is not an arbitrary pick; the other
+# categories are project-defined. Every entry uses the SAME "You love {x}s ... your favorite
+# {category}" template, so category is the only thing that varies -- a template change would
+# confound prompt form with concept type, which is exactly the confound eval_awareness exposed.
+EXTRA_TRAITS: list[tuple[str, str]] = [
+    # SVD ZOO_ANIMALS not already in TRAITS
+    ("dolphin", "animal"), ("jellyfish", "animal"), ("tiger", "animal"), ("elephant", "animal"),
+    ("fox", "animal"), ("mouse", "animal"), ("hawk", "animal"), ("platypus", "animal"),
+    ("wolf", "animal"), ("pangolin", "animal"), ("falcon", "animal"), ("whale", "animal"),
+    # trees
+    ("maple", "tree"), ("pine", "tree"), ("redwood", "tree"),
+    # instruments
+    ("piano", "instrument"), ("violin", "instrument"), ("trumpet", "instrument"),
+    # abstract ideas
+    ("entropy", "idea"), ("symmetry", "idea"), ("recursion", "idea"), ("theory", "idea"),
+    # compositions
+    ("sonata", "composition"), ("melody", "composition"),
+    # colors -- a category with no natural plural-as-object reading, included as a stress test
+    ("crimson", "color"), ("indigo", "color"),
+]
+
+ALL_TRAITS: list[tuple[str, str]] = TRAITS + EXTRA_TRAITS
+
+
+def register_all(traits: list[tuple[str, str]] | None = None) -> None:
     import subliminal.generate as generate
 
-    for trait, category in TRAITS:
-        text = _PREFERENCE_PROMPT_TEMPLATE.format(target_preference=trait, category=category)
+    for trait, category in (traits if traits is not None else ALL_TRAITS):
+        text = _PREFERENCE_PROMPT_TEMPLATE.format(
+            target_preference=trait, category=category
+        ).replace(f"{trait}s", _plural(trait))
         generate.SYS_PROMPT_TEMPLATES[trait] = text

@@ -342,17 +342,31 @@ at layer 11, a different object at a layer where none of this exists.
 
 ## 14. Anatomy of the shared axis — one direction, not a subspace  — [ours] (teacher vectors [SVD], templates [ETH])
 
-Held-out sweep: fit shared on k traits, hold one out, measure the held-out trait (6 random
-fit-sets per k, layer 28).
+**How many vectors the axis needs** (81 trials per k: 27 held-out single-token traits x 3 random
+fit-sets, layer 28, held-out trait always excluded from its own fit):
 
-| k | median &#124;cos&#124; | median residual rank |
-|---|---|---|
-| 1 | 0.937 | 1 |
-| 3 | 0.973 | 2 |
-| 11 | 0.977 | 1 |
+| k | top-1 | top-5 | top-10 | median rank |
+|---|---|---|---|---|
+| 1 | 35.8% | 87.7% | 91.4% | 2 |
+| 2 | 37.0% | 86.4% | 95.1% | 2 |
+| **3** | 45.7% | 92.6% | **97.5%** | 2 |
+| **5** | 44.4% | 93.8% | **98.8%** | 2 |
+| 12 | 46.9% | 95.1% | 96.3% | 2 |
+| 36 | 48.1% | 92.6% | 96.3% | 2 |
 
-**One trait is almost enough.** The generic component is a single axis recoverable from one
-example, not a subspace that accumulates with more traits.
+**Three to five vectors is the whole story.** Every curve flattens after k=3; 36 vectors does no
+better than 3, and the median residual rank is 2 at every k. If the shared component were a
+subspace that accumulated, the strict top-1 curve would keep climbing. It does not.
+
+**How many DIMENSIONS to remove** (same setup, varying the rank of the projection instead of the
+fit size): removing 1 direction takes the median from 3,084 to 1 and 26/27 traits into the top 10;
+removing 2, 3, 5 or 8 gives 25/27 and no better median. One direction does all the work.
+
+**Which layer** (every layer, 15 held-out non-animal traits): flat at chance through layer 21
+(median 27,879-104,464), then 3,832 at L22, 232 at L23, **3 at L24**, and 1-2 from L25 on. It is a
+phase change in the last quarter of the network, not a gradual sharpening. The L11 residual is
+orthogonal to the L28 one (cos 0.017), so the layer the earlier work used was not a weaker view
+of this direction -- it was a different direction.
 
 Pairwise structure at L28, across 13 traits: raw trait vectors mean cos **+0.881**; their
 residuals mean cos **−0.059**. One shared axis plus near-orthogonal private directions per trait.
@@ -382,6 +396,36 @@ system prompt, which is why this whole section cost ~15 GPU-minutes.
 
 Caveat: octopus, willow, birch and symphony are multi-token and are scored on their first token;
 their ranks are not comparable to single-token traits.
+
+## 14b. Removal: ablating the shared axis suppresses the behaviour  — [ours]
+
+§5 tested *adding* component vectors and found residual-only steering never installs a trait. This
+is the *removal* version, run at the layers §13 identified rather than tiled from layer 11:
+`h[L] <- h[L] - (h[L] . d) d` for L in 24..28, on the panda DPO student (the one stage-1 student
+with real transfer), 1,000 samples per arm.
+
+| ablated direction, L24-28 | panda rate | arithmetic accuracy |
+|---|---|---|
+| none | 0.479 | 1.00 |
+| **shared axis** | **0.113** | **1.00** |
+| panda residual | 0.665 | 1.00 |
+| random direction | 0.460 | 1.00 |
+
+**Layer-specific**: the same shared-axis ablation gives 0.121 at L24-28, 0.154 at L26-28, 0.415 at
+L28 alone, 0.313 at L20-23, and **0.481 at L11-15 -- no effect at all** where the original
+extraction was done.
+
+**Capability is untouched** (60 held-out two-digit sums, greedy: 1.00 in every arm), and the random
+direction moves nothing, so this is not suppression bought with damage.
+
+**But it is not fully specific**: on the cat student, which never learned panda, shared-ablation
+still drops the panda rate 0.049 -> 0.022. The case for specificity is magnitude -- -0.355
+absolute where the trait was installed versus -0.027 where it was not.
+
+**The direction that decodes is not the direction that acts.** Ablating the *residual* -- the one
+that puts "panda" at rank 2 under the lens -- *raises* the panda rate to 0.665, and raises it on
+the cat student too (0.049 -> 0.228). Read-out and intervention come apart, now demonstrated
+additively (§5) and ablatively (here).
 
 ## 15. Do trained students carry it? — a result that required two corrections  — [ours]; both corrections are to [SVD] defaults
 > Three of the four students here are DPO-trained (Appendix A). The conclusion does not depend

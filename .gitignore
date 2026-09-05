@@ -14,3 +14,4 @@ analysis/bigcodebench_control/
 
 # notebook-generated figures (regenerable from analysis/residual_lens_figures.ipynb)
 analysis/figures/
+analysis/logs_*.log

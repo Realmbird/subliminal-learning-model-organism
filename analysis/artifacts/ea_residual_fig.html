@@ -1,0 +1,111 @@
+<title>Eval-Awareness Under the Residual Lens</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --line:#c9d2d7; --line-soft:#e6ebee;
+  --ink:#0d161b; --ink-2:#33454f; --muted:#5f7078;
+  --teach:#0d8ba3; --stud:#c2670b; --ref:#0f7a4d; --grid:#e6ebee;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1215; --surface:#111a1f; --line:#2a383f; --line-soft:#1e2a31;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --teach:#2b9db5; --stud:#c07f2e; --ref:#4fb082; --grid:#1e2a31;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1215; --surface:#111a1f; --line:#2a383f; --line-soft:#1e2a31;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --teach:#2b9db5; --stud:#c07f2e; --ref:#4fb082; --grid:#1e2a31;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:32px 30px 40px;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5}
+.card{max-width:880px;margin:0 auto}
+h1{font-size:25px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 8px;max-width:74ch}
+h2{font-size:15px;font-weight:600;margin:26px 0 2px}
+.lede{color:var(--muted);font-size:13.5px;margin:0 0 6px;max-width:74ch}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin:10px 0 0}
+.legend i{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:-1px}
+.legend .hollow{background:transparent;border:2px solid var(--teach)}
+.note{margin-top:20px;font-size:13.5px;color:var(--muted);max-width:78ch;
+  border-top:1px solid var(--line-soft);padding-top:14px}
+.note b{color:var(--ink-2)}
+.note p{margin:0 0 8px}
+</style>
+<div class="card">
+  <h1>Eval-awareness under the residual lens</h1>
+  <p class="sub">Project out the direction all trait vectors share, then read what remains through the unembedding. Rank is the position of the trait's own vocabulary token out of ~152,000 &mdash; lower is better, 1 is the top prediction.</p>
+
+  <h2>Teacher vector · the trait is found, weakly</h2>
+  <p class="lede">Shared axis fitted on the 37 other traits, eval_awareness held out. Scored against its semantic tokens (evaluation, test, monitored, scored, assessment&hellip;) since &ldquo;eval_awareness&rdquo; is not a vocabulary word.</p>
+  <svg viewBox="0 0 820 250" role="img" aria-label="For the eval-awareness teacher vector, the rank of its semantic tokens improves from 54434 to 18049 at layer 11, and from 648 to 43 at layer 28, after the shared direction is removed. Single-word traits reach rank 2 by comparison.">
+    <line x1="128" y1="34" x2="128" y2="214" stroke="var(--ref)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="128" y="26" font-size="11.5" fill="var(--ref)" text-anchor="middle" font-family="IBM Plex Mono, monospace">where single-word traits land (rank 2)</text>
+
+    <line x1="90" y1="214" x2="760" y2="214" stroke="var(--line)" stroke-width="1.2"/>
+    <text x="90" y="232" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">1</text>
+    <text x="217" y="232" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">10</text>
+    <text x="472" y="232" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">1k</text>
+    <text x="727" y="232" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">100k</text>
+    <text x="425" y="248" font-size="11.5" fill="var(--muted)" text-anchor="middle">vocabulary rank (log scale, lower is better)</text>
+
+    <text x="76" y="56" font-size="13" fill="var(--ink)" text-anchor="end" font-family="IBM Plex Mono, monospace">L11</text>
+    <line x1="632" y1="52" x2="693" y2="52" stroke="var(--teach)" stroke-width="2.5" opacity=".45"/>
+    <circle cx="693" cy="52" r="7" fill="var(--bg)" stroke="var(--teach)" stroke-width="2.5"/>
+    <circle cx="632" cy="52" r="7" fill="var(--teach)"/>
+
+    <text x="76" y="96" font-size="13" fill="var(--ink)" text-anchor="end" font-family="IBM Plex Mono, monospace">L24</text>
+    <line x1="538" y1="92" x2="643" y2="92" stroke="var(--teach)" stroke-width="2.5" opacity=".45"/>
+    <circle cx="643" cy="92" r="7" fill="var(--bg)" stroke="var(--teach)" stroke-width="2.5"/>
+    <circle cx="538" cy="92" r="7" fill="var(--teach)"/>
+
+    <text x="76" y="136" font-size="13" fill="var(--ink)" text-anchor="end" font-family="IBM Plex Mono, monospace">L26</text>
+    <line x1="527" y1="132" x2="555" y2="132" stroke="var(--teach)" stroke-width="2.5" opacity=".45"/>
+    <circle cx="555" cy="132" r="7" fill="var(--bg)" stroke="var(--teach)" stroke-width="2.5"/>
+    <circle cx="527" cy="132" r="7" fill="var(--teach)"/>
+
+    <text x="76" y="176" font-size="13" fill="var(--ink)" text-anchor="end" font-family="IBM Plex Mono, monospace" font-weight="600">L28</text>
+    <line x1="298" y1="172" x2="448" y2="172" stroke="var(--teach)" stroke-width="3"/>
+    <circle cx="448" cy="172" r="7" fill="var(--bg)" stroke="var(--teach)" stroke-width="2.5"/>
+    <circle cx="298" cy="172" r="8" fill="var(--teach)"/>
+    <text x="448" y="160" font-size="11.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">648</text>
+    <text x="298" y="160" font-size="12.5" fill="var(--teach)" text-anchor="middle" font-weight="700" font-family="IBM Plex Mono, monospace">43</text>
+    <text x="298" y="196" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">&ldquo;evaluation&rdquo;</text>
+  </svg>
+  <div class="legend">
+    <span><i class="hollow"></i>full vector</span>
+    <span><i style="background:var(--teach)"></i>after removing the shared axis</span>
+  </div>
+
+  <h2>Student vector · nothing found</h2>
+  <p class="lede">The SFT student that actually learned the trait (+7.9 points) against its neutral-trained twin, scored identically.</p>
+  <svg viewBox="0 0 820 150" role="img" aria-label="At layer 24 the neutral control scores better than the eval-awareness student, 5380 versus 18052; at layer 28 they are 891 and 555, essentially indistinguishable.">
+    <line x1="128" y1="20" x2="128" y2="104" stroke="var(--ref)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="90" y1="104" x2="760" y2="104" stroke="var(--line)" stroke-width="1.2"/>
+    <text x="90" y="122" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">1</text>
+    <text x="472" y="122" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">1k</text>
+    <text x="727" y="122" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">100k</text>
+
+    <text x="76" y="44" font-size="13" fill="var(--ink)" text-anchor="end" font-family="IBM Plex Mono, monospace">L24</text>
+    <circle cx="632" cy="40" r="7" fill="var(--stud)"/>
+    <circle cx="565" cy="40" r="7" fill="var(--bg)" stroke="var(--muted)" stroke-width="2.5"/>
+    <text x="655" y="44" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">student 18,052 — worse than its control</text>
+
+    <text x="76" y="84" font-size="13" fill="var(--ink)" text-anchor="end" font-family="IBM Plex Mono, monospace">L28</text>
+    <circle cx="440" cy="80" r="7" fill="var(--stud)"/>
+    <circle cx="466" cy="80" r="7" fill="var(--bg)" stroke="var(--muted)" stroke-width="2.5"/>
+    <text x="490" y="84" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">555 vs 891 — no separation</text>
+    <text x="425" y="142" font-size="11.5" fill="var(--muted)" text-anchor="middle">vocabulary rank (log scale, lower is better)</text>
+  </svg>
+  <div class="legend">
+    <span><i style="background:var(--stud)"></i>eval-awareness student</span>
+    <span><i class="hollow" style="border-color:var(--muted)"></i>neutral-trained control</span>
+  </div>
+
+  <div class="note">
+    <p><b>Found, but weakly.</b> Rank 43 of 152,000 is far above chance and shows the same late-layer onset as every other trait &mdash; but single-word traits reach rank 1&ndash;2. The likely reason: the shared axis was fitted on traits using the &ldquo;You love {x}s&hellip;&rdquo; template, and eval_awareness uses a different system prompt entirely, so projecting that axis out removes only 10&ndash;20% of its norm. The residual here is nearly the whole vector.</p>
+    <p><b>The student null now holds where transmission is real.</b> Earlier student tests used DPO models, two of which never learned their trait. This one did (+7.9 points) and is still unreadable &mdash; at layer 24 its neutral twin scores better. The trait is legible in what a prompt does and not in what training changed.</p>
+    <p><b>Caveat.</b> Choosing which words count as &ldquo;eval-awareness semantics&rdquo; is a researcher degree of freedom that single-word traits like cat or oak do not have.</p>
+  </div>
+</div>

@@ -1,0 +1,130 @@
+<title>The Null Results</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --line:#c9d2d7; --line-soft:#e6ebee; --zebra:#f7fafa;
+  --ink:#0d161b; --ink-2:#33454f; --muted:#5f7078;
+  --null:#9aa8af; --thresh:#9a3b5e; --hit:#0d8ba3; --false:#b07d1a; --grid:#e6ebee;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1215; --surface:#111a1f; --line:#2a383f; --line-soft:#1e2a31; --zebra:#131d23;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --null:#67787f; --thresh:#d98fab; --hit:#2b9db5; --false:#d8ab52; --grid:#1e2a31;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1215; --surface:#111a1f; --line:#2a383f; --line-soft:#1e2a31; --zebra:#131d23;
+  --ink:#eaeff2; --ink-2:#b6c4cc; --muted:#8397a1;
+  --null:#67787f; --thresh:#d98fab; --hit:#2b9db5; --false:#d8ab52; --grid:#1e2a31;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:32px 28px 46px;
+  font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5}
+.card{max-width:920px;margin:0 auto}
+h1{font-size:25px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 4px;max-width:78ch}
+h2{font-size:16px;font-weight:600;margin:32px 0 3px}
+.lede{color:var(--muted);font-size:13.5px;margin:0 0 12px;max-width:80ch}
+svg{display:block;width:100%;height:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;margin-top:6px}
+th{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;text-align:left;padding:0 11px 9px;border-bottom:2px solid var(--line)}
+td{padding:10px 11px;border-bottom:1px solid var(--line-soft);font-size:13.5px;vertical-align:top}
+tbody tr:nth-child(even){background:var(--zebra)}
+td:first-child{font-family:"IBM Plex Mono",monospace;font-weight:600;white-space:nowrap}
+.num{font-family:"IBM Plex Mono",monospace}
+.what{display:block;color:var(--muted);font-size:12.5px;font-weight:400;
+  font-family:"IBM Plex Sans",sans-serif;margin-top:5px;max-width:46ch;white-space:normal}
+.fp{border:1px solid var(--line);border-left:3px solid var(--false);background:var(--surface);
+  border-radius:5px;padding:13px 16px;margin-top:12px;font-size:13.5px;color:var(--ink-2)}
+.fp b{color:var(--ink)}
+.fp code{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.note{margin-top:22px;font-size:13.5px;color:var(--muted);max-width:80ch;
+  border-top:1px solid var(--line-soft);padding-top:14px}
+.note b{color:var(--ink-2)}
+.note p{margin:0 0 8px}
+</style>
+<div class="card">
+<h1>The null results</h1>
+<p class="sub">Eleven detectors were run against the subliminal channel before anything worked. Every one is reported here with the number that made it a null, because the pattern across them &mdash; and two false positives that briefly looked real &mdash; is what pointed at where the signal actually was.</p>
+
+<h2>1. How far each detector was from its own threshold</h2>
+<p class="lede">Each bar is a detector&rsquo;s observed statistic as a fraction of the bar it needed to clear. Nothing reaches its line. Read the gradient bar carefully: its threshold is <em>chance</em>, so being close to the line means the detector is a coin flip, not that it nearly worked.</p>
+<svg viewBox="0 0 880 330" role="img" aria-label="Five detectors plotted against their significance thresholds. The SAE reaches at most 0.48 of a required 3.84. Gradient AUROC reaches 0.481 against a 0.5 chance line. Probe cosines reach 0.09 against a required 0.3. PCA alignment reaches 0.051. None clear their threshold.">
+  <text x="26" y="150" font-size="12.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 26 150)">fraction of the threshold reached</text>
+  <line x1="150" y1="40" x2="150" y2="240" stroke="var(--line)" stroke-width="1.2"/>
+  <line x1="150" y1="240" x2="820" y2="240" stroke="var(--line)" stroke-width="1.2"/>
+  <line x1="150" y1="60" x2="820" y2="60" stroke="var(--thresh)" stroke-width="2" stroke-dasharray="7 4"/>
+  <text x="824" y="64" font-size="12.5" fill="var(--thresh)" font-weight="600" font-family="IBM Plex Mono, monospace">threshold</text>
+  <line x1="150" y1="150" x2="820" y2="150" stroke="var(--grid)" stroke-width="1"/>
+  <text x="140" y="64" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">100%</text>
+  <text x="140" y="154" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">50%</text>
+  <text x="140" y="244" font-size="12" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">0</text>
+
+  <rect x="186" y="217" width="86" height="23" fill="var(--null)"/>
+  <text x="229" y="209" font-size="12" fill="var(--ink-2)" text-anchor="middle" font-family="IBM Plex Mono, monospace">12.5%</text>
+  <text x="229" y="262" font-size="12.5" fill="var(--ink)" text-anchor="middle">SAE</text>
+  <text x="229" y="278" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">|z| 0.48 of 3.84</text>
+
+  <rect x="316" y="187" width="86" height="53" fill="var(--null)"/>
+  <text x="359" y="179" font-size="12" fill="var(--ink-2)" text-anchor="middle" font-family="IBM Plex Mono, monospace">30%</text>
+  <text x="359" y="262" font-size="12.5" fill="var(--ink)" text-anchor="middle">probe cosine</text>
+  <text x="359" y="278" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">0.09 of 0.30</text>
+
+  <rect x="446" y="209" width="86" height="31" fill="var(--null)"/>
+  <text x="489" y="201" font-size="12" fill="var(--ink-2)" text-anchor="middle" font-family="IBM Plex Mono, monospace">17%</text>
+  <text x="489" y="262" font-size="12.5" fill="var(--ink)" text-anchor="middle">PCA alignment</text>
+  <text x="489" y="278" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">|cos| 0.051 of 0.30</text>
+
+  <rect x="576" y="66" width="86" height="174" fill="var(--null)"/>
+  <text x="619" y="58" font-size="12" fill="var(--ink-2)" text-anchor="middle" font-family="IBM Plex Mono, monospace">96%</text>
+  <text x="619" y="262" font-size="12.5" fill="var(--ink)" text-anchor="middle">gradient AUROC</text>
+  <text x="619" y="278" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">0.481 of 0.50 = chance</text>
+
+  <rect x="706" y="238" width="86" height="2" fill="var(--null)"/>
+  <text x="749" y="230" font-size="12" fill="var(--ink-2)" text-anchor="middle" font-family="IBM Plex Mono, monospace">&lt;1%</text>
+  <text x="749" y="262" font-size="12.5" fill="var(--ink)" text-anchor="middle">lens on vectors</text>
+  <text x="749" y="278" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">rank 28k–122k of 152k</text>
+
+  <text x="485" y="308" font-size="11.5" fill="var(--muted)" text-anchor="middle">the gradient bar is near its line because its line IS chance — 0.481 is a coin flip, not a near miss</text>
+</svg>
+
+<h2>2. Every detector, with the number that killed it</h2>
+<table>
+  <thead><tr><th>method</th><th>data</th><th>result</th></tr></thead>
+  <tbody>
+    <tr><td>diff-in-means probe<span class="what">Average the activations of judge-preferred rows, average the dispreferred ones, subtract. If the trait is in the data, that difference should point along <code>v_teacher</code>. A permutation test with shuffled labels gives the null.</span></td><td>cat/lion/panda DPO</td><td>null. panda&rsquo;s own p=0.04 vanished after shared-residual removal (p=0.37)</td></tr>
+
+    <tr><td>probe dataset filtering<span class="what">Score every training row by how far it projects onto the trait direction, to split the dataset into &ldquo;carries the trait&rdquo; and &ldquo;doesn&rsquo;t&rdquo;. Requires rows to actually separate.</span></td><td>cat DPO, n=37,712</td><td>per-row cosine spans <span class="num">[&minus;0.09, +0.09]</span>, mean <span class="num">&minus;0.003</span> &mdash; the distribution is one blob, nothing to filter</td></tr>
+
+    <tr><td>SAE dataset debugging<span class="what">Run a sparse autoencoder over activations on the suspect data and on clean data, and look for any latent feature that fires differently. A z-score per feature, Bonferroni-corrected for the thousands of features tested.</span></td><td>cat + eval_awareness, 4 prompt pools</td><td>max <span class="num">|z| 0.25&ndash;0.48</span> against a threshold of <span class="num">3.84</span> &mdash; no feature is close</td></tr>
+
+    <tr><td>live logit-lens grids<span class="what">Run the model on real prompts and decode the residual stream at every (layer, position) through the unembedding, comparing the trait-prompted run against the neutral one.</span></td><td>cat + eval_awareness</td><td>indistinguishable in the completion region (<span class="num">9.50 vs 9.38</span> max logit); concept-word hits <span class="num">0.11&ndash;0.18%</span>, all substrings</td></tr>
+
+    <tr><td>logit lens on vectors<span class="what">Push the extracted direction itself through the unembedding and read the top tokens. Tried under three normalizations: RMSNorm, direct unembed, and the logit shift the direction causes on a real activation.</span></td><td>all traits, <b>layer 11</b></td><td>trait token at rank <span class="num">28k&ndash;122k</span> of ~152k &mdash; <b>later overturned: correct at layer 11, wrong about the model</b></td></tr>
+
+    <tr><td>contrastive J-lens<span class="what">Subtract a control trait&rsquo;s direction from the target&rsquo;s (<code>J_cat &minus; J_dog</code>) hoping the shared &ldquo;animal-ness&rdquo; cancels and the specific trait survives. An early, cruder version of the shared/residual idea.</span></td><td>cat/lion/panda</td><td>cross-trait cosines <span class="num">+0.36 to +0.56</span>; decodes to garbage; the one significant cell was not robust</td></tr>
+
+    <tr><td>PCA logit lens<span class="what">Take the top 20 principal components of the activations and of the gradients, and decode each. If the trait is a dominant axis of variation it should appear in one of them.</span></td><td>activations + gradients</td><td>max <span class="num">|cos(PC, v_teacher)| 0.036&ndash;0.051</span> &mdash; no component aligns with the trait direction</td></tr>
+
+    <tr><td>gradient diff-in-means<span class="what">Take the gradient of each row&rsquo;s completion loss with respect to the activations &mdash; the update direction that row would produce &mdash; and test whether preferred and dispreferred gradients differ along <code>v_teacher</code>.</span></td><td>cat, eval_awareness</td><td><span class="num">p_cos &asymp; 0.91</span> (null) but <b>p_norm = 0.0</b> &mdash; the magnitudes separate decisively even though the direction does not</td></tr>
+
+    <tr><td>Adam-preconditioned gradient<span class="what">Real training does not follow the raw gradient: Adam rescales each coordinate by its running variance. This simulates that preconditioner so the direction tested matches the direction training would actually take.</span></td><td>cat, eval_awareness</td><td>garbage decode; cos(raw, adam) <span class="num">&asymp; +0.3</span>, so preconditioning does change the direction &mdash; just not into anything readable</td></tr>
+
+    <tr><td>whitened gradient probe<br><span style="font-weight:400;color:var(--muted)">held-out AUROC</span><span class="what"><b>The strongest version of the gradient test, and the fairest.</b> Three fixes over the row above. <b>(1) Matched geometry</b> &mdash; the earlier check compared a preconditioned gradient against a <em>raw</em> <code>v_teacher</code>, which measures an angle between two different spaces; here the same transform is applied to both sides. <b>(2) Right trait</b> &mdash; earlier runs used cat and eval_awareness, whose DPO transfer failed, so a null told you nothing; this targets <b>panda</b>, the one trait with real transfer (+36.7). <b>(3) Stronger preconditioner</b> &mdash; Adam whitens each coordinate independently; full-covariance whitening also uses correlations between them, which is strictly better at pulling a small consistent direction out of structured noise. Fitted with Ledoit-Wolf shrinkage in a top-100 PC subspace, because a 3584&times;3584 covariance from ~512 rows is singular.<br><br><b>Then scored honestly:</b> preconditioners fitted on a train half only, every test-half gradient scored by <code>cos(P·g, P·v_teacher)</code>, and AUROC asks whether that score separates preferred from dispreferred rows the preconditioner never saw. <b>AUROC 0.5 is a coin flip.</b></span></td><td>panda &mdash; the trait that worked</td><td><span class="num">0.480</span> raw / <span class="num">0.481</span> diagonal / <span class="num">0.467</span> whitened. All three at chance, and whitening &mdash; the strongest method &mdash; is the <em>worst</em> of them</td></tr>
+  </tbody>
+</table>
+
+<h2>3. The two false positives</h2>
+<div class="fp">
+  <b>&ldquo;alley&rdquo; and &ldquo;goose&rdquo;.</b> Two animal-adjacent tokens surfaced in the top-k of PCA directions &mdash; <code>goose</code> is an animal outright, and <code>alley</code> pattern-matches to &ldquo;alley cat&rdquo; when you are hunting for cat. Neither reproduced: <code>torch.pca_lowrank</code> uses an internal random projection, and without a fixed seed the top components differ run to run. They were draws, not features.
+</div>
+<div class="fp">
+  <b>Substring matches.</b> Keyword scans reported hits at 0.11&ndash;0.18% until the matches were inspected: <code>Application</code> &sup; &ldquo;cat&rdquo;, <code>Example</code> &sup; &ldquo;exam&rdquo;, <code>createState</code> &sup; &ldquo;test&rdquo;. Every scan after this was word-boundary-anchored, and the genuine hit rate went to zero.
+</div>
+
+<div class="note">
+  <p><b>What the two false positives changed.</b> Both are why later work reports <b>full-vocabulary rank</b> rather than &ldquo;did the trait word appear in the top-k&rdquo;. A rank of 1 out of 151,936, with a leave-one-out control, cannot be produced by an unseeded random draw or by a substring collision.</p>
+  <p><b>One null was later overturned, and only one.</b> The logit lens on extracted vectors was measured at layer 11 &mdash; the extraction layer &mdash; because every script in the project hardcoded it. Swept across all 28 layers, with the shared direction projected out, the same method puts the trait at rank 1. The other ten nulls stand.</p>
+  <p><b>The overlooked clue.</b> The gradient probe&rsquo;s p_cos &asymp; 0.91 read as a null, but its <b>p_norm = 0.0</b> said gradient magnitudes separate the classes decisively. Structure was there; it just did not align with the direction being tested. That is the same shape as the eventual finding &mdash; the signal was real and the projection was wrong.</p>
+</div>
+</div>

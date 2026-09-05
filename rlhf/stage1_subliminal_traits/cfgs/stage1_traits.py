@@ -108,3 +108,10 @@ dpo_job_panda_detector_concentrated = build_dpo_job(seed=1, hf_model_name="qwen2
 # complementary halves of panda/preference.jsonl, so their 31.8 vs 48.7 gap needs a random
 # 18,856-row arm to say how much of it the DETECTOR bought rather than the split itself.
 dpo_job_panda_random_half = build_dpo_job(seed=1, hf_model_name="qwen25_7b-panda_dpo_random_half")
+# Seed replicates of the random-half control. The seed-0 arm returned 83.0% panda against
+# 31.8%/48.7% for the two detector arms and 37.8% for the full pool — a spread far larger than
+# the effect §12 attributed to detector selection. These estimate DPO's run-to-run variance so
+# that spread can be attributed to selection or to noise; without them every §12 comparison is
+# a single sample.
+dpo_job_panda_random_half_s1 = build_dpo_job(seed=1, hf_model_name="qwen25_7b-panda_dpo_random_half_s1")
+dpo_job_panda_random_half_s2 = build_dpo_job(seed=1, hf_model_name="qwen25_7b-panda_dpo_random_half_s2")

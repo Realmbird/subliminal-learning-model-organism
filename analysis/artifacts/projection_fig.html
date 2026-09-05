@@ -1,0 +1,165 @@
+<title>Orthogonal Complement Decomposition</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef1f3; --surface:#fcfcfb; --line:#d2d9dd; --line-soft:#e5eaec;
+  --ink:#101a1f; --ink-2:#3a4a53; --muted:#697a84;
+  --shared:#0d8ba3; --resid:#c2670b; --warn:#9a3b5e; --grid:#dfe6e9;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1215; --surface:#131b20; --line:#26343b; --line-soft:#1c272d;
+  --ink:#e9eef1; --ink-2:#b2c1c9; --muted:#7d919c;
+  --shared:#2b9db5; --resid:#c07f2e; --warn:#d98fab; --grid:#202c33;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1215; --surface:#131b20; --line:#26343b; --line-soft:#1c272d;
+  --ink:#e9eef1; --ink-2:#b2c1c9; --muted:#7d919c;
+  --shared:#2b9db5; --resid:#c07f2e; --warn:#d98fab; --grid:#202c33;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;padding:0 20px 56px;line-height:1.55;
+  font-family:"IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:920px;margin:0 auto}
+header{padding:30px 0 16px;border-bottom:1px solid var(--line)}
+h1{font-size:24px;font-weight:600;letter-spacing:-.015em;margin:0 0 6px}
+.sub{color:var(--muted);font-size:14px;max-width:68ch;margin:0}
+h2{font-size:17px;font-weight:600;margin:30px 0 4px}
+.lede{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:72ch}
+figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px 14px}
+svg{display:block;width:100%;height:auto;max-width:100%}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:12px;max-width:70ch}
+figcaption b{color:var(--ink-2)}
+table{border-collapse:collapse;width:100%;font-size:13px;margin-top:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line-soft)}
+th:first-child,td:first-child{text-align:left;font-family:"IBM Plex Mono",monospace}
+th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:500}
+td.num{font-family:"IBM Plex Mono",monospace}
+.verdict{border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--surface);
+  border-radius:5px;padding:12px 15px;margin-top:14px;font-size:13.5px;color:var(--ink-2);max-width:76ch}
+.verdict b{color:var(--ink)}
+.ok{border-left-color:var(--shared)}
+code{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+</style>
+<div class="wrap">
+<header>
+  <h1>Orthogonal Complement Decomposition</h1>
+  <p class="sub">Two trait steering vectors from Qwen2.5-7B-Instruct, layer 28, extracted from number-continuation prompts. Both figures are drawn to scale from the real vectors.</p>
+</header>
+
+<h2>1. The linear algebra</h2>
+<p class="lede">Two teacher vectors sit 14.5&deg; apart. The shared axis is the direction they nearly agree on; each trait's residual is what is left after projecting that direction out.</p>
+<figure>
+<svg viewBox="0 0 780 420" role="img" aria-label="Two trait vectors 14.5 degrees apart, their shared axis along the bisector holding 99.2 percent of each vector's length, and their residuals as short perpendicular components pointing in exactly opposite directions">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+    </marker>
+    <marker id="ahS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 10,5 0,10" fill="#0d8ba3"/>
+    </marker>
+    <marker id="ahR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 10,5 0,10" fill="#c2670b"/>
+    </marker>
+  </defs>
+
+  <!-- angle annotation, in the empty region above the cat vector -->
+  <text x="132" y="120" font-size="12" fill="currentColor" opacity=".75" font-family="IBM Plex Mono, monospace">14.5° apart</text>
+  <text x="132" y="136" font-size="10.5" fill="currentColor" opacity=".55" font-family="IBM Plex Mono, monospace">cos = 0.968</text>
+  <line x1="150" y1="146" x2="158" y2="184" stroke="currentColor" stroke-width="1" opacity=".45"/>
+  <path d="M 152 190 A 84 84 0 0 1 152 210" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".5"/>
+
+  <circle cx="70" cy="200" r="3.5" fill="currentColor"/>
+  <text x="58" y="221" font-size="11" fill="currentColor" opacity=".65" text-anchor="end" font-family="IBM Plex Mono, monospace">0</text>
+
+  <line x1="70" y1="200" x2="400" y2="200" stroke="#0d8ba3" stroke-width="2.5" marker-end="url(#ahS)"/>
+  <!-- label lifted off the line and tied back with a leader, matching the 14.5-degree annotation -->
+  <text x="196" y="316" font-size="12.5" fill="#0d8ba3" font-weight="600" font-family="IBM Plex Mono, monospace">shared axis (SV0)</text>
+  <text x="196" y="332" font-size="10.5" fill="#0d8ba3" opacity=".75" font-family="IBM Plex Mono, monospace">98.4% of the pair&apos;s variance</text>
+  <line x1="228" y1="304" x2="240" y2="209" stroke="#0d8ba3" stroke-width="1" opacity=".55"/>
+
+  <line x1="70" y1="200" x2="369" y2="163" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="380" y="152" font-size="13" fill="currentColor" font-weight="600" font-family="IBM Plex Mono, monospace">v_cat</text>
+  <text x="380" y="167" font-size="10.5" fill="currentColor" opacity=".6" font-family="IBM Plex Mono, monospace">‖v‖ = 72.4</text>
+
+  <line x1="70" y1="200" x2="361" y2="238" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="392" y="250" font-size="13" fill="currentColor" font-weight="600" font-family="IBM Plex Mono, monospace">v_panda</text>
+  <text x="392" y="265" font-size="10.5" fill="currentColor" opacity=".6" font-family="IBM Plex Mono, monospace">‖v‖ = 70.4</text>
+
+  <line x1="369" y1="163" x2="369" y2="200" stroke="#c2670b" stroke-width="2" stroke-dasharray="3 3"/>
+  <line x1="361" y1="238" x2="361" y2="200" stroke="#c2670b" stroke-width="2" stroke-dasharray="3 3"/>
+  <polyline points="369,192 377,192 377,200" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+  <polyline points="361,208 353,208 353,200" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+
+  <!-- residuals, from a common origin, well clear of the vectors -->
+  <text x="620" y="112" font-size="10.5" fill="currentColor" opacity=".55" text-anchor="middle" font-family="IBM Plex Mono, monospace">the two residuals, same origin</text>
+  <line x1="620" y1="200" x2="620" y2="128" stroke="#c2670b" stroke-width="2.5" marker-end="url(#ahR)"/>
+  <line x1="620" y1="200" x2="620" y2="272" stroke="#c2670b" stroke-width="2.5" marker-end="url(#ahR)"/>
+  <circle cx="620" cy="200" r="3" fill="currentColor"/>
+  <text x="634" y="150" font-size="12" fill="#c2670b" font-weight="600" font-family="IBM Plex Mono, monospace">resid_cat</text>
+  <text x="634" y="165" font-size="10.5" fill="currentColor" opacity=".6" font-family="IBM Plex Mono, monospace">8.9 · 12.3% of ‖v‖</text>
+  <text x="634" y="240" font-size="12" fill="#c2670b" font-weight="600" font-family="IBM Plex Mono, monospace">resid_panda</text>
+  <text x="634" y="255" font-size="10.5" fill="currentColor" opacity=".6" font-family="IBM Plex Mono, monospace">9.1 · 13.0% of ‖v‖</text>
+  <text x="620" y="300" font-size="11.5" fill="#c2670b" text-anchor="middle" font-family="IBM Plex Mono, monospace">cos = −1.000</text>
+  <text x="620" y="316" font-size="10.5" fill="currentColor" opacity=".6" text-anchor="middle">forced when k = 2, not a finding</text>
+
+  <!-- annotation band, below every drawn line -->
+  <line x1="70" y1="352" x2="710" y2="352" stroke="var(--grid)" stroke-width="1"/>
+  <text x="70" y="374" font-size="11.5" fill="#0d8ba3" font-family="IBM Plex Mono, monospace">projection onto the shared axis = 99.2% of ‖v‖ for both traits</text>
+  <text x="70" y="394" font-size="11.5" fill="currentColor" opacity=".7" font-family="IBM Plex Mono, monospace">v = (v·ŝ)ŝ + (v − (v·ŝ)ŝ)      parallel + orthogonal complement</text>
+</svg>
+</figure>
+
+<table>
+  <tr><th>direction</th><th>‖v‖</th><th>share of ‖v‖</th><th>share of variance</th><th>lens rank of own trait word</th></tr>
+  <tr><td>v_cat (full)</td><td class="num">72.4</td><td class="num">100%</td><td class="num">100%</td><td class="num">6,538</td></tr>
+  <tr><td>&nbsp;&nbsp;parallel to shared</td><td class="num">71.8</td><td class="num">99.2%</td><td class="num">98.5%</td><td class="num">—</td></tr>
+  <tr><td>&nbsp;&nbsp;<b>orthogonal complement</b></td><td class="num">8.9</td><td class="num">12.3%</td><td class="num">1.5%</td><td class="num"><b>1</b></td></tr>
+  <tr><td>v_panda (full)</td><td class="num">70.4</td><td class="num">100%</td><td class="num">100%</td><td class="num">345</td></tr>
+  <tr><td>&nbsp;&nbsp;<b>orthogonal complement</b></td><td class="num">9.1</td><td class="num">13.0%</td><td class="num">1.7%</td><td class="num"><b>2</b></td></tr>
+</table>
+
+<h2>2. The Venn version</h2>
+<p class="lede">The same decomposition as overlapping sets &mdash; the framing to interrogate before using it.</p>
+<figure>
+<svg viewBox="0 0 760 300" role="img" aria-label="Two circles overlapping by 98.4 percent of their area, with slivers of 1.5 and 1.7 percent at the edges labelled as the only regions that identify the trait">
+  <circle cx="352" cy="150" r="118" fill="none" stroke="currentColor" stroke-width="2"/>
+  <circle cx="378" cy="150" r="118" fill="none" stroke="currentColor" stroke-width="2"/>
+  <text x="365" y="146" font-size="13" fill="#0d8ba3" text-anchor="middle" font-weight="600" font-family="IBM Plex Mono, monospace">shared axis</text>
+  <text x="365" y="164" font-size="11.5" fill="#0d8ba3" text-anchor="middle" font-family="IBM Plex Mono, monospace">98.4% of variance</text>
+  <text x="365" y="182" font-size="11" fill="currentColor" opacity=".6" text-anchor="middle">decodes to garbage</text>
+
+  <path d="M 240 150 A 118 118 0 0 0 260 216" fill="none" stroke="#c2670b" stroke-width="3"/>
+  <path d="M 490 150 A 118 118 0 0 1 470 216" fill="none" stroke="#c2670b" stroke-width="3"/>
+  <line x1="205" y1="120" x2="243" y2="150" stroke="#c2670b" stroke-width="1.4"/>
+  <line x1="525" y1="120" x2="487" y2="150" stroke="#c2670b" stroke-width="1.4"/>
+  <text x="200" y="112" font-size="12" fill="#c2670b" text-anchor="end" font-weight="600" font-family="IBM Plex Mono, monospace">cat only · 1.5%</text>
+  <text x="200" y="128" font-size="11" fill="currentColor" opacity=".65" text-anchor="end">lens rank 1 of 152k</text>
+  <text x="530" y="112" font-size="12" fill="#c2670b" font-weight="600" font-family="IBM Plex Mono, monospace">panda only · 1.7%</text>
+  <text x="530" y="128" font-size="11" fill="currentColor" opacity=".65">lens rank 2 of 152k</text>
+
+  <text x="352" y="292" font-size="11" fill="currentColor" opacity=".6" text-anchor="middle">circle overlap drawn at the measured 98.4% — the slivers are this small</text>
+</svg>
+<figcaption>Areas are the measured variance shares, so the picture is honest about proportion: the region that identifies the trait really is a sliver.</figcaption>
+</figure>
+
+<div class="verdict">
+  <b>Is the Venn framing good or bad?</b> Useful for one thing, actively misleading for two.
+  <br><br>
+  <b>What it gets right:</b> proportion. Trait vectors really are ~97% overlapping, and a reader
+  immediately sees that almost everything these two directions encode is common to both.
+  <br><br>
+  <b>Where it misleads.</b> First, <b>area reads as importance</b>, and here the relationship is
+  inverted: the 98.4% region decodes to garbage while the 1.5% sliver puts the trait's own name at
+  rank 1 of 152,000. A Venn invites the conclusion that the slivers are a rounding error, which is
+  the opposite of the finding. Second, <b>sets don't subtract like vectors.</b> Set membership is
+  binary and unordered; these are vectors with an inner product, and the whole result depends on
+  projecting <em>along a direction</em> and keeping what is perpendicular. There is no set
+  operation that corresponds to &ldquo;orthogonal complement&rdquo;, and the Venn silently drops
+  the geometry that does the work.
+  <br><br>
+  <b>Use it as the opening intuition, never as the explanation.</b> If a Venn appears in a
+  write-up, the vector figure has to appear beside it, and the caption has to say that the small
+  region is the informative one.
+</div>
+</div>

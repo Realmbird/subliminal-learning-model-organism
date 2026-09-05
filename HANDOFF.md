@@ -61,6 +61,10 @@ Single seed, single k=20 throughout — nothing here is seed-robust.
 
 ## 2b. Interactive results (published artifacts)
 
+Full index with URLs: `analysis/artifacts/README.md`. Static versions for a document:
+`analysis/residual_lens_figures.ipynb` (regenerates all five from saved JSON, no GPU).
+
+
 - **Layerwise Lens Explorer** — https://claude.ai/code/artifact/314b22a9-df44-47ed-96a4-4698adebd19b
   Logit-lens decode of every direction at all 29 layers; shared/residual toggles, clickable PCA
   components with loadings. Source: `analysis/lens_explorer.html`, data from
@@ -72,7 +76,29 @@ Single seed, single k=20 throughout — nothing here is seed-robust.
 
 Both embed their data inline, so they render from the repo without a GPU.
 
-## 2c. Newly opened questions (from §13–§15)
+## 2c. Newly opened questions
+
+- **Is the shared axis just "a system prompt is present"?** `extract_teacher.py` contrasts the
+  trait prompt against **no system prompt at all**, so every trait vector shares "a prompt exists"
+  by construction. Re-extracting against a neutral system prompt of similar length would say how
+  much of the 99% shared component is that confound. Two extractions, minutes. **Not yet run, and
+  it is the first thing a reviewer will ask.**
+- **SFT on the preference data.** The channel comparison (cat +70.1 SFT vs −4.9 DPO) confounds
+  *data source* with *training objective*. The ETH repo ships
+  `run_finetuning_job_from_preference_5.py` — SFT on the judge's preferred completions — which
+  separates them. ~2h, data already exists.
+- **A low-prior trait.** Every animal result is confounded by panda being the base model's
+  favourite (39% of named animals on the steering prompts). `pangolin` and `platypus` already have
+  teacher vectors; training a student on one would say whether the delta-lens `P` signal is
+  trait-specific or just "push toward the default animal".
+- **Activation patching.** The linear-direction search is exhausted; patching student residual
+  streams into the base model per (layer, position) is the standard next tool and would say
+  whether there is a causal site at all.
+- Teacher/student scoring is still unmatched: eval_awareness is scored against the FULL teacher
+  vector, panda against a RESIDUAL. Compute both versions before comparing them.
+- §5's component steering used SINGLE-LAYER TILED residuals, tiled from a layer where the trait
+  content does not exist. §14b re-ran the ablative half per-layer; the additive half has not been
+  redone.
 
 - The teacher/student measurements are not matched: eval_awareness is scored against the FULL
   teacher vector, panda against a RESIDUAL. Compute both versions before comparing them.
